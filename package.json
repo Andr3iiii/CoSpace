@@ -1,0 +1,38 @@
+{
+  "name": "cospace-monorepo",
+  "version": "1.0.0",
+  "description": "CoSpace - Production-Ready Coworking Space Booking and Management Platform",
+  "private": true,
+  "workspaces": [
+    "Admin/Frontend",
+    "Admin/Backend",
+    "Client/Frontend",
+    "Client/Backend"
+  ],
+  "scripts": {
+    "dev": "concurrently -n \"ADMIN-FE,ADMIN-BE,CLIENT-FE,CLIENT-BE\" -c \"blue,cyan,green,yellow\" \"npm run dev --prefix Admin/Frontend\" \"npm run dev --prefix Admin/Backend\" \"npm run dev --prefix Client/Frontend\" \"npm run dev --prefix Client/Backend\"",
+    "dev:admin": "concurrently -n \"ADMIN-FE,ADMIN-BE\" -c \"blue,cyan\" \"npm run dev --prefix Admin/Frontend\" \"npm run dev --prefix Admin/Backend\"",
+    "dev:client": "concurrently -n \"CLIENT-FE,CLIENT-BE\" -c \"green,yellow\" \"npm run dev --prefix Client/Frontend\" \"npm run dev --prefix Client/Backend\"",
+    "build": "npm run build --prefix Admin/Frontend && npm run build --prefix Admin/Backend && npm run build --prefix Client/Frontend && npm run build --prefix Client/Backend",
+    "test": "npm run test --prefix Admin/Backend && npm run test --prefix Client/Backend",
+    "lint": "echo \"Linting all workspaces...\"",
+    "format": "echo \"Formatting all workspaces...\"",
+    "db:migrate": "node Database/scripts/migrate.js",
+    "db:seed": "node Database/scripts/seed.js",
+    "db:reset": "node Database/scripts/reset.js"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  },
+  "keywords": [
+    "cospace",
+    "coworking",
+    "boilerplate",
+    "fullstack",
+    "react",
+    "express",
+    "postgresql"
+  ],
+  "author": "CoSpace Engineering Team",
+  "license": "MIT"
+}
