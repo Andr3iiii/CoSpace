@@ -1,7 +1,7 @@
-import React, { useState, InputHTMLAttributes, forwardRef } from 'react';
-import { theme } from '../../theme/theme';
+import * as React from 'react';
+import { cn } from '@/lib/utils';
 
-export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
   helperText?: string;
@@ -9,105 +9,53 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   rightIcon?: React.ReactNode;
 }
 
-export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, helperText, leftIcon, rightIcon, style, disabled, ...props }, ref) => {
-    const [isFocused, setIsFocused] = useState(false);
-    const [isHovered, setIsHovered] = useState(false);
+export const Input = React.forwardRef<HTMLInputElement, InputProps>(
+  ({ className, type, label, error, helperText, leftIcon, rightIcon, id, ...props }, ref) => {
+    const generatedId = React.useId();
+    const inputId = id || generatedId;
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', width: '100%', marginBottom: '12px' }}>
+      <div className="w-full space-y-1.5">
         {label && (
           <label
-            style={{
-              fontSize: theme.typography.fontSize.sm,
-              fontWeight: theme.typography.fontWeight.medium,
-              color: error ? theme.colors.danger : theme.colors.textMuted,
-              marginBottom: theme.spacing.xs,
-            }}
+            htmlFor={inputId}
+            className="block text-xs font-semibold tracking-wide text-muted-foreground uppercase"
           >
             {label}
           </label>
         )}
-        <div
-          style={{
-            position: 'relative',
-            display: 'flex',
-            alignItems: 'center',
-            width: '100%',
-          }}
-        >
+        <div className="relative flex items-center">
           {leftIcon && (
-            <span
-              style={{
-                position: 'absolute',
-                left: '12px',
-                display: 'flex',
-                alignItems: 'center',
-                color: isFocused ? theme.colors.primary : theme.colors.textDim,
-                pointerEvents: 'none',
-              }}
-            >
+            <div className="pointer-events-none absolute left-3 flex items-center justify-center text-muted-foreground">
               {leftIcon}
-            </span>
+            </div>
           )}
           <input
+            id={inputId}
+            type={type}
+            className={cn(
+              'flex h-10 w-full rounded-lg border border-border bg-card/60 px-3 py-2 text-sm text-foreground ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:border-transparent disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-150',
+              leftIcon && 'pl-10',
+              rightIcon && 'pr-10',
+              error && 'border-destructive focus-visible:ring-destructive',
+              className
+            )}
             ref={ref}
-            disabled={disabled}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-            style={{
-              width: '100%',
-              padding: leftIcon ? '10px 14px 10px 38px' : rightIcon ? '10px 38px 10px 14px' : '10px 14px',
-              backgroundColor: theme.colors.surface,
-              border: `1px solid ${
-                error
-                  ? theme.colors.danger
-                  : isFocused
-                  ? theme.colors.primary
-                  : isHovered
-                  ? theme.colors.borderLight
-                  : theme.colors.border
-              }`,
-              borderRadius: theme.radius.md,
-              color: theme.colors.text,
-              fontSize: theme.typography.fontSize.base,
-              outline: 'none',
-              transition: 'all 0.15s ease',
-              boxShadow: isFocused ? `0 0 0 3px ${error ? theme.colors.dangerBg : theme.colors.primaryLight}` : 'none',
-              opacity: disabled ? 0.6 : 1,
-              cursor: disabled ? 'not-allowed' : 'text',
-              ...style,
-            }}
             {...props}
           />
           {rightIcon && (
-            <span
-              style={{
-                position: 'absolute',
-                right: '12px',
-                display: 'flex',
-                alignItems: 'center',
-                color: theme.colors.textDim,
-              }}
-            >
+            <div className="absolute right-3 flex items-center justify-center text-muted-foreground">
               {rightIcon}
-            </span>
+            </div>
           )}
         </div>
         {error ? (
-          <span style={{ fontSize: theme.typography.fontSize.xs, color: theme.colors.danger, marginTop: '4px' }}>
-            {error}
-          </span>
+          <p className="text-xs font-medium text-destructive animate-in fade-in-50">{error}</p>
         ) : helperText ? (
-          <span style={{ fontSize: theme.typography.fontSize.xs, color: theme.colors.textDim, marginTop: '4px' }}>
-            {helperText}
-          </span>
+          <p className="text-xs text-muted-foreground">{helperText}</p>
         ) : null}
       </div>
     );
   }
 );
-
 Input.displayName = 'Input';

@@ -1,49 +1,59 @@
 import React from 'react';
-import { theme } from '../../theme/theme';
 import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export interface ToastProps {
-  type?: 'success' | 'error' | 'info';
+  type?: 'success' | 'error' | 'info' | 'warning';
   message: string;
   onClose?: () => void;
+  className?: string;
 }
 
-export const Toast: React.FC<ToastProps> = ({ type = 'info', message, onClose }) => {
+export const Toast: React.FC<ToastProps> = ({ type = 'info', message, onClose, className }) => {
   const getIcon = () => {
     switch (type) {
       case 'success':
-        return <CheckCircle2 size={18} color={theme.colors.success} />;
+        return <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />;
       case 'error':
-        return <AlertCircle size={18} color={theme.colors.danger} />;
+        return <AlertCircle className="h-5 w-5 text-destructive shrink-0" />;
+      case 'warning':
+        return <AlertCircle className="h-5 w-5 text-amber-400 shrink-0" />;
       case 'info':
       default:
-        return <Info size={18} color={theme.colors.info} />;
+        return <Info className="h-5 w-5 text-sky-400 shrink-0" />;
+    }
+  };
+
+  const getBorderColor = () => {
+    switch (type) {
+      case 'success':
+        return 'border-emerald-500/30 bg-emerald-950/20';
+      case 'error':
+        return 'border-destructive/30 bg-destructive/10';
+      case 'warning':
+        return 'border-amber-500/30 bg-amber-950/20';
+      default:
+        return 'border-border bg-card/90';
     }
   };
 
   return (
     <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '10px',
-        padding: '12px 16px',
-        backgroundColor: theme.colors.surfaceCard,
-        border: `1px solid ${theme.colors.borderLight}`,
-        borderRadius: theme.radius.md,
-        boxShadow: theme.shadows.lg,
-        color: theme.colors.text,
-        fontSize: theme.typography.fontSize.sm,
-      }}
+      className={cn(
+        'flex items-center gap-3 rounded-xl border p-4 shadow-xl backdrop-blur-md text-sm text-foreground transition-all duration-200 animate-in fade-in-0 slide-in-from-top-2',
+        getBorderColor(),
+        className
+      )}
     >
       {getIcon()}
-      <span style={{ flex: 1 }}>{message}</span>
+      <span className="flex-1 font-medium">{message}</span>
       {onClose && (
         <button
+          type="button"
           onClick={onClose}
-          style={{ background: 'none', border: 'none', color: theme.colors.textDim, cursor: 'pointer' }}
+          className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         >
-          <X size={16} />
+          <X className="h-4 w-4" />
         </button>
       )}
     </div>

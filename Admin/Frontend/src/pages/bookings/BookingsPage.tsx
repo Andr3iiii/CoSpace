@@ -5,7 +5,7 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Select } from '../../components/ui/Select';
-import { Badge } from '../../components/ui/Badge';
+import { Badge, StatusBadge } from '../../components/ui/Badge';
 import { Table, Column } from '../../components/ui/Table';
 import { Pagination } from '../../components/ui/Pagination';
 import { AlertDialog } from '../../components/ui/AlertDialog';
@@ -127,14 +127,7 @@ export const BookingsPage: React.FC = () => {
     },
     {
       header: 'Status',
-      accessor: (item) => {
-        let variant: 'success' | 'warning' | 'danger' | 'info' | 'neutral' = 'neutral';
-        if (item.status === 'confirmed' || item.status === 'completed') variant = 'success';
-        if (item.status === 'pending') variant = 'warning';
-        if (item.status === 'cancelled') variant = 'danger';
-        if (item.status === 'active') variant = 'info';
-        return <Badge variant={variant}>{item.status}</Badge>;
-      },
+      accessor: (item) => <StatusBadge status={item.status}>{item.status}</StatusBadge>,
     },
     {
       header: 'Actions',
@@ -262,9 +255,9 @@ export const BookingsPage: React.FC = () => {
               <div>
                 <span style={{ fontSize: '12px', color: theme.colors.textDim }}>Status</span>
                 <div>
-                  <Badge variant={selectedBooking.status === 'confirmed' ? 'success' : selectedBooking.status === 'pending' ? 'warning' : 'neutral'}>
+                  <StatusBadge status={selectedBooking.status}>
                     {selectedBooking.status}
-                  </Badge>
+                  </StatusBadge>
                 </div>
               </div>
               <div style={{ textAlign: 'right' }}>

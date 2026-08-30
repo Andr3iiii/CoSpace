@@ -5,7 +5,7 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Select } from '../../components/ui/Select';
-import { Badge } from '../../components/ui/Badge';
+import { Badge, StatusBadge } from '../../components/ui/Badge';
 import { Table, Column } from '../../components/ui/Table';
 import { Pagination } from '../../components/ui/Pagination';
 import { AlertDialog } from '../../components/ui/AlertDialog';
@@ -95,11 +95,7 @@ export const PaymentsPage: React.FC = () => {
     },
     {
       header: 'Status',
-      accessor: (item) => (
-        <Badge variant={item.status === 'completed' ? 'success' : item.status === 'refunded' ? 'danger' : 'warning'}>
-          {item.status}
-        </Badge>
-      ),
+      accessor: (item) => <StatusBadge status={item.status}>{item.status}</StatusBadge>,
     },
     {
       header: 'Date',

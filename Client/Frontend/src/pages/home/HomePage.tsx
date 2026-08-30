@@ -5,19 +5,18 @@ import { Workspace } from '../../types';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
-import { theme } from '../../theme/theme';
 import {
   Sparkles,
-  Search,
   Wifi,
   Coffee,
   Users,
   Building2,
-  CheckCircle2,
   ArrowRight,
   Shield,
   Clock,
   Star,
+  Laptop,
+  Armchair,
 } from 'lucide-react';
 
 export const HomePage: React.FC = () => {
@@ -29,7 +28,7 @@ export const HomePage: React.FC = () => {
         const spaces = await workspaceApi.getWorkspaces({ limit: 4 });
         setFeaturedSpaces(spaces);
       } catch {
-        // Fallback for mock preview
+        // Fallback for preview
         setFeaturedSpaces([
           {
             id: 'w0000000-0000-0000-0000-000000000001',
@@ -71,68 +70,78 @@ export const HomePage: React.FC = () => {
     loadFeatured();
   }, []);
 
+  const getWorkspaceTypeConfig = (typeSlug?: string, typeName?: string) => {
+    const normalized = (typeSlug || typeName || '').toLowerCase().replace(/[\s_]+/g, '-');
+    switch (normalized) {
+      case 'hot-desk':
+      case 'hot-desks':
+        return {
+          variant: 'info' as const,
+          label: 'Hot Desk',
+          icon: <Laptop className="h-3 w-3" />,
+        };
+      case 'dedicated-desk':
+        return {
+          variant: 'indigo' as const,
+          label: 'Dedicated Desk',
+          icon: <Armchair className="h-3 w-3" />,
+        };
+      case 'private-office':
+        return {
+          variant: 'purple' as const,
+          label: 'Private Office',
+          icon: <Building2 className="h-3 w-3" />,
+        };
+      case 'meeting-room':
+        return {
+          variant: 'warning' as const,
+          label: 'Meeting Room',
+          icon: <Users className="h-3 w-3" />,
+        };
+      case 'event-space':
+        return {
+          variant: 'rose' as const,
+          label: 'Event Space',
+          icon: <Sparkles className="h-3 w-3" />,
+        };
+      default:
+        return {
+          variant: 'success' as const,
+          label: typeName || 'Workspace',
+          icon: <Building2 className="h-3 w-3" />,
+        };
+    }
+  };
+
   return (
     <div>
       {/* 1. Hero Section */}
-      <section
-        style={{
-          padding: '80px 24px',
-          background: 'radial-gradient(ellipse at top, #1E293B 0%, #0F172A 70%)',
-          textAlign: 'center',
-          borderBottom: `1px solid ${theme.colors.border}`,
-        }}
-      >
-        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              backgroundColor: theme.colors.primaryLight,
-              border: `1px solid ${theme.colors.successBorder}`,
-              borderRadius: theme.radius.full,
-              padding: '6px 14px',
-              color: theme.colors.primary,
-              fontSize: '12px',
-              fontWeight: 600,
-              marginBottom: '20px',
-            }}
-          >
-            <Sparkles size={14} /> The Future of Coworking in BGC
+      <section className="relative py-20 px-6 text-center border-b border-border/80 bg-gradient-to-b from-card/80 via-background to-background overflow-hidden">
+        <div className="max-w-4xl mx-auto space-y-6">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-wider shadow-sm">
+            <Sparkles className="h-3.5 w-3.5" />
+            <span>The Future of Coworking in BGC</span>
           </div>
 
-          <h1
-            style={{
-              fontSize: '44px',
-              fontWeight: 800,
-              color: '#FFFFFF',
-              lineHeight: 1.15,
-              letterSpacing: '-0.03em',
-              marginBottom: '16px',
-            }}
-          >
-            Work, Collaborate & Create in Premium Spaces
+          <h1 className="text-4xl sm:text-6xl font-black text-foreground tracking-tight leading-tight">
+            Work, Collaborate & Create in{' '}
+            <span className="bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent">
+              Premium Spaces
+            </span>
           </h1>
 
-          <p
-            style={{
-              fontSize: '16px',
-              color: theme.colors.textMuted,
-              lineHeight: 1.6,
-              marginBottom: '32px',
-            }}
-          >
+          <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
             Instant reservations for hot desks, quiet executive focus suites, and high-tech 4K meeting boardrooms with gigabit fiber internet.
           </p>
 
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', flexWrap: 'wrap' }}>
-            <Link to="/workspaces" style={{ textDecoration: 'none' }}>
-              <Button variant="primary" size="lg" rightIcon={<ArrowRight size={18} />}>
+          <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
+            <Link to="/workspaces">
+              <Button size="lg" variant="primary" rightIcon={<ArrowRight className="h-4 w-4" />} className="shadow-lg shadow-primary/25 font-bold px-8">
                 Explore Workspaces
               </Button>
             </Link>
-            <Link to="/register" style={{ textDecoration: 'none' }}>
-              <Button variant="secondary" size="lg">
+            <Link to="/register">
+              <Button size="lg" variant="outline" className="font-semibold px-8">
                 Join Community
               </Button>
             </Link>
@@ -141,51 +150,53 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* 2. Perks / Features Section */}
-      <section style={{ padding: '64px 24px', maxWidth: '1200px', margin: '0 auto' }}>
-        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-          <h2 style={{ fontSize: '28px', fontWeight: 800, color: '#fff' }}>Why Teams Choose CoSpace</h2>
-          <p style={{ fontSize: '14px', color: theme.colors.textDim, marginTop: '6px' }}>
-            Designed ground-up for founders, freelancers, and enterprise teams
+      <section className="py-16 px-6 max-w-7xl mx-auto">
+        <div className="text-center mb-12 space-y-2">
+          <h2 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
+            Why Teams Choose CoSpace
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Designed ground-up for founders, freelancers, and growing enterprise teams
           </p>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '24px' }}>
-          <Card>
-            <div style={{ width: '40px', height: '40px', borderRadius: '8px', backgroundColor: theme.colors.primaryLight, display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.colors.primary, marginBottom: '14px' }}>
-              <Wifi size={20} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card hoverEffect className="space-y-3">
+            <div className="h-11 w-11 rounded-xl bg-primary/15 flex items-center justify-center text-primary border border-primary/20">
+              <Wifi className="h-5 w-5" />
             </div>
-            <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#fff', marginBottom: '6px' }}>Gigabit Fiber Mesh</h3>
-            <p style={{ fontSize: '13px', color: theme.colors.textMuted, lineHeight: 1.5 }}>
+            <h3 className="text-base font-bold text-foreground">Gigabit Fiber Mesh</h3>
+            <p className="text-xs text-muted-foreground leading-relaxed">
               Redundant low-latency enterprise fiber connection guaranteed to keep high-bandwidth video streams and uploads fast.
             </p>
           </Card>
 
-          <Card>
-            <div style={{ width: '40px', height: '40px', borderRadius: '8px', backgroundColor: 'rgba(99, 102, 241, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.colors.secondary, marginBottom: '14px' }}>
-              <Coffee size={20} />
+          <Card hoverEffect className="space-y-3">
+            <div className="h-11 w-11 rounded-xl bg-indigo-500/15 flex items-center justify-center text-indigo-400 border border-indigo-500/20">
+              <Coffee className="h-5 w-5" />
             </div>
-            <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#fff', marginBottom: '6px' }}>Artisan Cafe & Bar</h3>
-            <p style={{ fontSize: '13px', color: theme.colors.textMuted, lineHeight: 1.5 }}>
+            <h3 className="text-base font-bold text-foreground">Artisan Cafe & Bar</h3>
+            <p className="text-xs text-muted-foreground leading-relaxed">
               Unlimited complimentary single-origin barista espresso, cold brews, and healthy snack options all day long.
             </p>
           </Card>
 
-          <Card>
-            <div style={{ width: '40px', height: '40px', borderRadius: '8px', backgroundColor: 'rgba(245, 158, 11, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.colors.accent, marginBottom: '14px' }}>
-              <Clock size={20} />
+          <Card hoverEffect className="space-y-3">
+            <div className="h-11 w-11 rounded-xl bg-amber-500/15 flex items-center justify-center text-amber-400 border border-amber-500/20">
+              <Clock className="h-5 w-5" />
             </div>
-            <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#fff', marginBottom: '6px' }}>Instant Mobile Check-in</h3>
-            <p style={{ fontSize: '13px', color: theme.colors.textMuted, lineHeight: 1.5 }}>
+            <h3 className="text-base font-bold text-foreground">Instant QR Check-in</h3>
+            <p className="text-xs text-muted-foreground leading-relaxed">
               Seamless QR code entry. Reserve your desk in seconds and walk straight in with instant automated verification.
             </p>
           </Card>
 
-          <Card>
-            <div style={{ width: '40px', height: '40px', borderRadius: '8px', backgroundColor: 'rgba(16, 185, 129, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.colors.success, marginBottom: '14px' }}>
-              <Shield size={20} />
+          <Card hoverEffect className="space-y-3">
+            <div className="h-11 w-11 rounded-xl bg-emerald-500/15 flex items-center justify-center text-emerald-400 border border-emerald-500/20">
+              <Shield className="h-5 w-5" />
             </div>
-            <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#fff', marginBottom: '6px' }}>24/7 Security & Access</h3>
-            <p style={{ fontSize: '13px', color: theme.colors.textMuted, lineHeight: 1.5 }}>
+            <h3 className="text-base font-bold text-foreground">24/7 Security & Access</h3>
+            <p className="text-xs text-muted-foreground leading-relaxed">
               CCTV surveillance, private lockable storage units, and concierge staff available to support your meetings.
             </p>
           </Card>
@@ -193,63 +204,95 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* 3. Featured Workspaces Section */}
-      <section style={{ padding: '64px 24px', backgroundColor: theme.colors.surfaceCard, borderTop: `1px solid ${theme.colors.border}`, borderBottom: `1px solid ${theme.colors.border}` }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
+      <section className="py-16 px-6 bg-card/40 border-y border-border/80">
+        <div className="max-w-7xl mx-auto space-y-8">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div>
-              <h2 style={{ fontSize: '26px', fontWeight: 800, color: '#fff' }}>Featured Workspaces</h2>
-              <p style={{ fontSize: '13px', color: theme.colors.textDim }}>Hand-picked spaces ready for instant reservation</p>
+              <h2 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
+                Featured Workspaces
+              </h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                Hand-picked spaces ready for instant reservation
+              </p>
             </div>
-            <Link to="/workspaces" style={{ textDecoration: 'none' }}>
-              <Button variant="outline" size="sm" rightIcon={<ArrowRight size={15} />}>
+            <Link to="/workspaces">
+              <Button variant="outline" size="sm" rightIcon={<ArrowRight className="h-4 w-4" />}>
                 View All Workspaces
               </Button>
             </Link>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
-            {featuredSpaces.map((ws) => (
-              <Card key={ws.id} style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 0, border: `1px solid ${theme.colors.borderLight}` }}>
-                <div
-                  style={{
-                    height: '180px',
-                    backgroundImage: `url(${ws.images?.[0] || 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800'})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                    position: 'relative',
-                    padding: '14px',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                  }}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {featuredSpaces.map((ws) => {
+              const typeConfig = getWorkspaceTypeConfig(ws.type_slug, ws.workspace_type);
+              return (
+                <Card
+                  key={ws.id}
+                  hoverEffect
+                  className="p-0 overflow-hidden flex flex-col group border-border/80 bg-card/60 backdrop-blur-md"
                 >
-                  <Badge variant="success">{ws.workspace_type}</Badge>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', backgroundColor: 'rgba(0,0,0,0.7)', padding: '3px 8px', borderRadius: '12px', fontSize: '12px', color: '#FCD34D', fontWeight: 600 }}>
-                    <Star size={13} fill="#FCD34D" /> {ws.average_rating || '4.9'}
-                  </div>
-                </div>
+                  {/* Workspace Image Banner */}
+                  <div className="relative h-44 w-full overflow-hidden bg-muted">
+                    <img
+                      src={
+                        ws.images?.[0] ||
+                        'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800'
+                      }
+                      alt={ws.name}
+                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30 pointer-events-none" />
 
-                <div style={{ padding: '20px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                  <div>
-                    <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#fff', marginBottom: '8px' }}>{ws.name}</h3>
-                    <p style={{ fontSize: '13px', color: theme.colors.textDim, lineHeight: 1.5, marginBottom: '16px' }}>
-                      {ws.description}
-                    </p>
-                  </div>
-
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '16px', borderTop: `1px solid ${theme.colors.border}` }}>
-                    <div>
-                      <span style={{ fontSize: '20px', fontWeight: 800, color: theme.colors.primary }}>₱{ws.hourly_rate}</span>
-                      <span style={{ fontSize: '12px', color: theme.colors.textDim }}> / hour</span>
+                    {/* Top Badges */}
+                    <div className="absolute top-3 left-3 right-3 flex items-start justify-between gap-2 pointer-events-auto">
+                      <Badge variant={typeConfig.variant} className="gap-1.5 shadow-md">
+                        {typeConfig.icon}
+                        <span>{ws.workspace_type || typeConfig.label}</span>
+                      </Badge>
+                      <div className="flex items-center gap-1 rounded-full bg-black/60 backdrop-blur-md px-2.5 py-0.5 text-xs font-bold text-amber-400 border border-white/10 shadow-sm self-start shrink-0">
+                        <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                        <span>{ws.average_rating || '4.9'}</span>
+                      </div>
                     </div>
-                    <Link to={`/workspaces/${ws.id}`} style={{ textDecoration: 'none' }}>
-                      <Button variant="primary" size="sm">
-                        Book Space
-                      </Button>
-                    </Link>
                   </div>
-                </div>
-              </Card>
-            ))}
+
+                  {/* Workspace Details */}
+                  <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <Users className="h-3.5 w-3.5 text-primary" />
+                        <span>
+                          Capacity: {ws.capacity} {ws.capacity === 1 ? 'person' : 'people'} • {ws.floor}
+                        </span>
+                      </div>
+                      <h3 className="text-base font-bold text-foreground line-clamp-1 group-hover:text-primary transition-colors">
+                        {ws.name}
+                      </h3>
+                      <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                        {ws.description}
+                      </p>
+                    </div>
+
+                    <div className="pt-4 border-t border-border/80 flex items-center justify-between">
+                      <div>
+                        <span className="text-lg font-black text-primary">
+                          ₱{parseFloat(String(ws.hourly_rate)).toLocaleString()}
+                        </span>
+                        <span className="text-[11px] text-muted-foreground"> / hr</span>
+                        <div className="text-[10px] text-muted-foreground">
+                          ₱{parseFloat(String(ws.daily_rate)).toLocaleString()} / day
+                        </div>
+                      </div>
+                      <Link to={`/workspaces/${ws.id}`}>
+                        <Button variant="primary" size="sm" className="font-semibold shadow-sm">
+                          Book Now
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
+                </Card>
+              );
+            })}
           </div>
         </div>
       </section>

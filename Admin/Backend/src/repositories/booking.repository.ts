@@ -141,9 +141,9 @@ export class AdminBookingRepository {
 
     await query(
       `UPDATE bookings 
-       SET status = $1, 
-           cancelled_reason = CASE WHEN $1 = 'cancelled' THEN $2 ELSE cancelled_reason END,
-           cancelled_at = CASE WHEN $1 = 'cancelled' THEN CURRENT_TIMESTAMP ELSE cancelled_at END,
+       SET status = $1::varchar, 
+           cancelled_reason = CASE WHEN $1::varchar = 'cancelled' THEN $2::text ELSE cancelled_reason END,
+           cancelled_at = CASE WHEN $1::varchar = 'cancelled' THEN CURRENT_TIMESTAMP ELSE cancelled_at END,
            updated_at = CURRENT_TIMESTAMP
        WHERE id = $3`,
       [toStatus, reason || null, id]

@@ -1,8 +1,14 @@
-import React from 'react';
-import { Dialog } from './Dialog';
+import * as React from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from './Dialog';
 import { Button } from './Button';
-import { theme } from '../../theme/theme';
-import { AlertCircle } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 
 export interface AlertDialogProps {
   isOpen: boolean;
@@ -28,41 +34,38 @@ export const AlertDialog: React.FC<AlertDialogProps> = ({
   isLoading = false,
 }) => {
   return (
-    <Dialog isOpen={isOpen} onClose={onClose} title={title} maxWidth="440px">
-      <div style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
-        <div
-          style={{
-            width: '40px',
-            height: '40px',
-            borderRadius: '50%',
-            backgroundColor: isDestructive ? theme.colors.dangerBg : theme.colors.warningBg,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: isDestructive ? theme.colors.danger : theme.colors.warning,
-            flexShrink: 0,
-          }}
-        >
-          <AlertCircle size={22} />
-        </div>
-        <div>
-          <p style={{ fontSize: theme.typography.fontSize.base, color: theme.colors.textMuted, lineHeight: 1.5 }}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-[440px]">
+        <DialogHeader>
+          <div className="flex items-center gap-3">
+            <div
+              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
+                isDestructive
+                  ? 'bg-destructive/15 text-destructive'
+                  : 'bg-amber-500/15 text-amber-400'
+              }`}
+            >
+              <AlertTriangle className="h-5 w-5" />
+            </div>
+            <DialogTitle className="text-lg font-bold">{title}</DialogTitle>
+          </div>
+          <DialogDescription className="pt-2 text-sm text-muted-foreground leading-relaxed">
             {description}
-          </p>
-        </div>
-      </div>
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-        <Button variant="secondary" onClick={onClose} disabled={isLoading}>
-          {cancelLabel}
-        </Button>
-        <Button
-          variant={isDestructive ? 'danger' : 'primary'}
-          onClick={onConfirm}
-          isLoading={isLoading}
-        >
-          {confirmLabel}
-        </Button>
-      </div>
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="gap-2 sm:gap-0 mt-4">
+          <Button variant="outline" onClick={onClose} disabled={isLoading}>
+            {cancelLabel}
+          </Button>
+          <Button
+            variant={isDestructive ? 'destructive' : 'primary'}
+            onClick={onConfirm}
+            isLoading={isLoading}
+          >
+            {confirmLabel}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
     </Dialog>
   );
 };

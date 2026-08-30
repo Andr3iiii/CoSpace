@@ -4,7 +4,6 @@ import { Sidebar } from '../components/layout/Sidebar';
 import { Header } from '../components/layout/Header';
 import { useAuth } from '../stores/AuthContext';
 import { useResponsive } from '../hooks/useResponsive';
-import { theme } from '../theme/theme';
 
 export const AdminLayout: React.FC = () => {
   const { token, isLoading } = useAuth();
@@ -14,17 +13,7 @@ export const AdminLayout: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div
-        style={{
-          display: 'flex',
-          height: '100vh',
-          width: '100vw',
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: theme.colors.background,
-          color: theme.colors.textMuted,
-        }}
-      >
+      <div className="flex h-screen w-screen items-center justify-center bg-background text-muted-foreground text-sm">
         Loading administration portal...
       </div>
     );
@@ -47,19 +36,19 @@ export const AdminLayout: React.FC = () => {
   };
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: theme.colors.background }}>
+    <div className="flex min-h-screen bg-background">
       {/* Desktop Sidebar / Mobile Overlay Sidebar */}
       {(!isMobile || mobileSidebarOpen) && (
-        <Sidebar onClose={() => setMobileSidebarOpen(false)} />
+        <Sidebar isOpen={mobileSidebarOpen} onClose={() => setMobileSidebarOpen(false)} />
       )}
 
       {/* Main Container */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+      <div className="flex-1 flex flex-col min-w-0">
         <Header
           title={getPageTitle()}
           onMenuToggle={isMobile ? () => setMobileSidebarOpen(!mobileSidebarOpen) : undefined}
         />
-        <main style={{ flex: 1, padding: '24px', overflowY: 'auto' }}>
+        <main className="flex-1 p-6 overflow-y-auto">
           <Outlet />
         </main>
       </div>

@@ -1,6 +1,6 @@
 import React from 'react';
-import { theme } from '../../theme/theme';
 import { Bell, Search, Menu } from 'lucide-react';
+import { Button } from '../ui/Button';
 
 export interface HeaderProps {
   title: string;
@@ -9,102 +9,37 @@ export interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ title, onMenuToggle }) => {
   return (
-    <header
-      style={{
-        height: '64px',
-        backgroundColor: theme.colors.header,
-        borderBottom: `1px solid ${theme.colors.border}`,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '0 24px',
-        position: 'sticky',
-        top: 0,
-        zIndex: 40,
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+    <header className="h-16 border-b border-border/80 bg-card/60 backdrop-blur-md flex items-center justify-between px-6 sticky top-0 z-40">
+      <div className="flex items-center gap-3">
         {onMenuToggle && (
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={onMenuToggle}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: theme.colors.text,
-              cursor: 'pointer',
-              display: 'flex',
-              padding: '6px',
-            }}
+            className="md:hidden text-foreground"
           >
-            <Menu size={20} />
-          </button>
+            <Menu className="h-5 w-5" />
+          </Button>
         )}
-        <h2 style={{ fontSize: theme.typography.fontSize.lg, fontWeight: theme.typography.fontWeight.bold, color: theme.colors.text }}>
-          {title}
-        </h2>
+        <h2 className="text-lg font-bold tracking-tight text-foreground">{title}</h2>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+      <div className="flex items-center gap-3">
         {/* Quick Search */}
-        <div
-          style={{
-            position: 'relative',
-            display: 'flex',
-            alignItems: 'center',
-          }}
-        >
-          <Search
-            size={16}
-            style={{
-              position: 'absolute',
-              left: '10px',
-              color: theme.colors.textDim,
-              pointerEvents: 'none',
-            }}
-          />
+        <div className="relative hidden sm:flex items-center">
+          <Search className="absolute left-3 h-4 w-4 text-muted-foreground pointer-events-none" />
           <input
             type="text"
-            placeholder="Search dashboard..."
-            style={{
-              padding: '6px 12px 6px 32px',
-              fontSize: theme.typography.fontSize.xs,
-              backgroundColor: theme.colors.surface,
-              border: `1px solid ${theme.colors.border}`,
-              borderRadius: theme.radius.md,
-              color: theme.colors.text,
-              width: '200px',
-              outline: 'none',
-            }}
+            placeholder="Search resources..."
+            className="h-9 w-52 rounded-lg border border-border bg-background/50 pl-9 pr-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all"
           />
         </div>
 
         {/* Notifications Icon */}
-        <button
-          style={{
-            background: theme.colors.surface,
-            border: `1px solid ${theme.colors.border}`,
-            borderRadius: theme.radius.md,
-            color: theme.colors.textMuted,
-            padding: '8px',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            position: 'relative',
-          }}
-        >
-          <Bell size={18} />
-          <span
-            style={{
-              position: 'absolute',
-              top: '6px',
-              right: '6px',
-              width: '8px',
-              height: '8px',
-              borderRadius: '50%',
-              backgroundColor: theme.colors.primary,
-            }}
-          />
-        </button>
+        <Button variant="outline" size="icon" className="relative h-9 w-9 text-muted-foreground hover:text-foreground">
+          <Bell className="h-4 w-4" />
+          <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-primary" />
+        </Button>
       </div>
     </header>
   );

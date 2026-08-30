@@ -1,72 +1,44 @@
 import React from 'react';
-import { theme } from '../../theme/theme';
 import { Sparkles, MapPin, Mail, Phone } from 'lucide-react';
 
 export const Footer: React.FC = () => {
   return (
-    <footer
-      style={{
-        backgroundColor: theme.colors.footer,
-        borderTop: `1px solid ${theme.colors.border}`,
-        padding: '48px 24px 32px 24px',
-        marginTop: 'auto',
-      }}
-    >
-      <div
-        style={{
-          maxWidth: '1200px',
-          margin: '0 auto',
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-          gap: '32px',
-          marginBottom: '32px',
-        }}
-      >
+    <footer className="border-t border-border/80 bg-card/40 mt-auto pt-12 pb-8 px-6">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-            <div
-              style={{
-                width: '28px',
-                height: '28px',
-                borderRadius: theme.radius.sm,
-                backgroundColor: theme.colors.primary,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#FFFFFF',
-              }}
-            >
-              <Sparkles size={16} />
+          <div className="flex items-center gap-2.5 mb-3">
+            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground shadow-md shadow-primary/25">
+              <Sparkles className="h-4 w-4" />
             </div>
-            <span style={{ fontSize: '18px', fontWeight: 800, color: '#fff' }}>CoSpace</span>
+            <span className="text-lg font-black text-foreground">CoSpace</span>
           </div>
-          <p style={{ fontSize: '13px', color: theme.colors.textDim, lineHeight: 1.6 }}>
+          <p className="text-sm text-muted-foreground leading-relaxed">
             Next-generation collaborative workspaces, private executive studios, and smart boardrooms designed for ambitious teams and creators.
           </p>
         </div>
 
         <div>
-          <h4 style={{ fontSize: '14px', fontWeight: 700, color: theme.colors.text, marginBottom: '12px' }}>
+          <h4 className="text-sm font-bold text-foreground mb-3 uppercase tracking-wider">
             Location & Contact
           </h4>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px', color: theme.colors.textMuted }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <MapPin size={15} color={theme.colors.primary} /> 7th Ave, Bonifacio Global City, Taguig
+          <div className="flex flex-col gap-2.5 text-sm text-muted-foreground">
+            <span className="flex items-center gap-2.5">
+              <MapPin className="h-4 w-4 text-primary shrink-0" /> 7th Ave, Bonifacio Global City, Taguig
             </span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Mail size={15} color={theme.colors.primary} /> hello@cospace.com
+            <span className="flex items-center gap-2.5">
+              <Mail className="h-4 w-4 text-primary shrink-0" /> hello@cospace.com
             </span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Phone size={15} color={theme.colors.primary} /> +63 2 8888 1234
+            <span className="flex items-center gap-2.5">
+              <Phone className="h-4 w-4 text-primary shrink-0" /> +63 2 8888 1234
             </span>
           </div>
         </div>
 
         <div>
-          <h4 style={{ fontSize: '14px', fontWeight: 700, color: theme.colors.text, marginBottom: '12px' }}>
+          <h4 className="text-sm font-bold text-foreground mb-3 uppercase tracking-wider">
             Space Types
           </h4>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '13px', color: theme.colors.textDim }}>
+          <div className="flex flex-col gap-2 text-sm text-muted-foreground">
             <span>Hot Desks & Open Lounges</span>
             <span>Dedicated Fix Desks</span>
             <span>Private Team Offices</span>
@@ -76,21 +48,7 @@ export const Footer: React.FC = () => {
         </div>
       </div>
 
-      <div
-        style={{
-          maxWidth: '1200px',
-          margin: '0 auto',
-          paddingTop: '20px',
-          borderTop: `1px solid ${theme.colors.border}`,
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '12px',
-          fontSize: '12px',
-          color: theme.colors.textDim,
-        }}
-      >
+      <div className="max-w-7xl mx-auto pt-6 border-t border-border/60 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
         <span>© {new Date().getFullYear()} CoSpace Technologies Inc. All rights reserved.</span>
         <span>Secure Payments powered by PayMongo</span>
       </div>

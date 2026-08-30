@@ -10,9 +10,9 @@
     "Client/Backend"
   ],
   "scripts": {
-    "dev": "concurrently -n \"ADMIN-FE,ADMIN-BE,CLIENT-FE,CLIENT-BE\" -c \"blue,cyan,green,yellow\" \"npm run dev --prefix Admin/Frontend\" \"npm run dev --prefix Admin/Backend\" \"npm run dev --prefix Client/Frontend\" \"npm run dev --prefix Client/Backend\"",
-    "dev:admin": "concurrently -n \"ADMIN-FE,ADMIN-BE\" -c \"blue,cyan\" \"npm run dev --prefix Admin/Frontend\" \"npm run dev --prefix Admin/Backend\"",
-    "dev:client": "concurrently -n \"CLIENT-FE,CLIENT-BE\" -c \"green,yellow\" \"npm run dev --prefix Client/Frontend\" \"npm run dev --prefix Client/Backend\"",
+    "dev": "concurrently --kill-others -n \"ADMIN-FE,ADMIN-BE,CLIENT-FE,CLIENT-BE\" -c \"blue,cyan,green,yellow\" \"npm run dev --prefix Admin/Frontend\" \"npm run dev --prefix Admin/Backend\" \"npm run dev --prefix Client/Frontend\" \"npm run dev --prefix Client/Backend\"",
+    "dev:admin": "concurrently --kill-others -n \"ADMIN-FE,ADMIN-BE\" -c \"blue,cyan\" \"npm run dev --prefix Admin/Frontend\" \"npm run dev --prefix Admin/Backend\"",
+    "dev:client": "concurrently --kill-others -n \"CLIENT-FE,CLIENT-BE\" -c \"green,yellow\" \"npm run dev --prefix Client/Frontend\" \"npm run dev --prefix Client/Backend\"",
     "build": "npm run build --prefix Admin/Frontend && npm run build --prefix Admin/Backend && npm run build --prefix Client/Frontend && npm run build --prefix Client/Backend",
     "test": "npm run test --prefix Admin/Backend && npm run test --prefix Client/Backend",
     "lint": "echo \"Linting all workspaces...\"",

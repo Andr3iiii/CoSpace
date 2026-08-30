@@ -5,7 +5,7 @@ import { useAuth } from '../../stores/AuthContext';
 import { Booking } from '../../types';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
-import { Badge } from '../../components/ui/Badge';
+import { Badge, StatusBadge } from '../../components/ui/Badge';
 import { Tabs } from '../../components/ui/Tabs';
 import { Dialog } from '../../components/ui/Dialog';
 import { AlertDialog } from '../../components/ui/AlertDialog';
@@ -128,9 +128,9 @@ export const MyBookingsPage: React.FC = () => {
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
                     <span style={{ fontWeight: 700, color: '#fff', fontSize: '16px' }}>{b.workspace_name}</span>
-                    <Badge variant={b.status === 'confirmed' ? 'success' : b.status === 'pending' ? 'warning' : 'neutral'}>
+                    <StatusBadge status={b.status}>
                       {b.status}
-                    </Badge>
+                    </StatusBadge>
                   </div>
                   <div style={{ fontSize: '13px', color: theme.colors.textMuted }}>
                     {format(new Date(b.start_time), 'EEEE, MMMM dd, yyyy')} • {format(new Date(b.start_time), 'hh:mm a')} - {format(new Date(b.end_time), 'hh:mm a')}

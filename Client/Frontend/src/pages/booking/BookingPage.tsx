@@ -4,13 +4,12 @@ import { workspaceApi } from '../../api/workspace.api';
 import { bookingApi } from '../../api/booking.api';
 import { useAuth } from '../../stores/AuthContext';
 import { Workspace } from '../../types';
-import { Card } from '../../components/ui/Card';
+import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
-import { Badge } from '../../components/ui/Badge';
-import { theme } from '../../theme/theme';
-import { ArrowLeft, Calendar, Clock, Plus, Check, AlertCircle } from 'lucide-react';
-import { addHours, format, setHours, setMinutes } from 'date-fns';
+import { ArrowLeft, Check, AlertCircle } from 'lucide-react';
+import { addHours, format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 export const BookingPage: React.FC = () => {
   const { workspaceId } = useParams<{ workspaceId: string }>();
@@ -18,6 +17,7 @@ export const BookingPage: React.FC = () => {
   const navigate = useNavigate();
 
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
+
   // Compute initial upcoming date and hour
   const getInitialBookingSlot = () => {
     const now = new Date();
@@ -61,15 +61,15 @@ export const BookingPage: React.FC = () => {
 
   if (!client) {
     return (
-      <div style={{ maxWidth: '480px', margin: '80px auto', textAlign: 'center', padding: '24px' }}>
-        <h2 style={{ fontSize: '22px', fontWeight: 700, color: '#fff', marginBottom: '8px' }}>
-          Sign In Required
-        </h2>
-        <p style={{ color: theme.colors.textMuted, marginBottom: '24px', fontSize: '14px' }}>
+      <div className="max-w-md mx-auto my-24 text-center p-6 space-y-4">
+        <h2 className="text-2xl font-bold text-foreground">Sign In Required</h2>
+        <p className="text-sm text-muted-foreground">
           Please sign in or create an account to reserve workspace inventory.
         </p>
-        <Link to="/login" style={{ textDecoration: 'none' }}>
-          <Button variant="primary" size="lg">Sign In to Continue</Button>
+        <Link to="/login">
+          <Button variant="primary" size="lg" className="w-full mt-4">
+            Sign In to Continue
+          </Button>
         </Link>
       </div>
     );
@@ -94,7 +94,7 @@ export const BookingPage: React.FC = () => {
 
   const grandTotal = workspaceSubtotal + addOnsTotal;
 
-  const toggleAddon = (id: string, price: number) => {
+  const toggleAddon = (id: string) => {
     setSelectedAddOns((prev) => ({
       ...prev,
       [id]: prev[id] ? 0 : 1,
@@ -141,214 +141,185 @@ export const BookingPage: React.FC = () => {
   };
 
   return (
-    <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '32px 24px', width: '100%' }}>
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 w-full">
       <Link
         to={workspace ? `/workspaces/${workspace.id}` : '/workspaces'}
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '6px',
-          color: theme.colors.textMuted,
-          textDecoration: 'none',
-          fontSize: '13px',
-          marginBottom: '20px',
-        }}
+        className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground mb-6 transition-colors"
       >
-        <ArrowLeft size={16} /> Back to details
+        <ArrowLeft className="h-4 w-4" /> Back to details
       </Link>
 
-      <div style={{ marginBottom: '24px' }}>
-        <h1 style={{ fontSize: '28px', fontWeight: 800, color: '#fff', marginBottom: '6px' }}>
+      <div className="mb-6">
+        <h1 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
           Reserve {workspace?.name || 'Workspace'}
         </h1>
-        <p style={{ fontSize: '14px', color: theme.colors.textMuted }}>
+        <p className="text-sm text-muted-foreground mt-1">
           Select your desired date, duration, and optional add-ons.
         </p>
       </div>
 
       {errorMessage && (
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-            padding: '14px',
-            borderRadius: theme.radius.md,
-            backgroundColor: theme.colors.dangerBg,
-            border: `1px solid ${theme.colors.dangerBorder}`,
-            color: theme.colors.danger,
-            fontSize: '14px',
-            marginBottom: '24px',
-          }}
-        >
-          <AlertCircle size={20} style={{ flexShrink: 0 }} />
+        <div className="flex items-center gap-2.5 rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive mb-6 animate-in fade-in-50">
+          <AlertCircle className="h-5 w-5 shrink-0" />
           <span>{errorMessage}</span>
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '32px' }}>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Form: Date, Time & Add-ons */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <div className="lg:col-span-2 space-y-6">
           {/* Date & Time selector */}
           <Card>
-            <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#fff', marginBottom: '16px' }}>
-              1. Date & Time Duration
-            </h3>
+            <CardHeader className="pb-4">
+              <CardTitle className="text-base font-bold">1. Date & Time Duration</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Input
+                  label="Reservation Date"
+                  type="date"
+                  value={selectedDate}
+                  min={format(new Date(), 'yyyy-MM-dd')}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                />
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-              <Input
-                label="Reservation Date"
-                type="date"
-                value={selectedDate}
-                min={format(new Date(), 'yyyy-MM-dd')}
-                onChange={(e) => setSelectedDate(e.target.value)}
-              />
-
-              <Input
-                label="Start Time"
-                type="time"
-                value={selectedHour}
-                onChange={(e) => setSelectedHour(e.target.value)}
-              />
-            </div>
-
-            <div style={{ marginTop: '8px' }}>
-              <label style={{ display: 'block', fontSize: '13px', color: theme.colors.textMuted, marginBottom: '8px', fontWeight: 500 }}>
-                Duration: <strong style={{ color: theme.colors.primary }}>{durationHours} Hours</strong>
-              </label>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                {[1, 2, 4, 8].map((h) => (
-                  <Button
-                    key={h}
-                    type="button"
-                    variant={durationHours === h ? 'primary' : 'secondary'}
-                    size="sm"
-                    onClick={() => setDurationHours(h)}
-                  >
-                    {h} {h === 1 ? 'Hour' : h === 8 ? 'Full Day (8 hrs)' : 'Hours'}
-                  </Button>
-                ))}
+                <Input
+                  label="Start Time"
+                  type="time"
+                  value={selectedHour}
+                  onChange={(e) => setSelectedHour(e.target.value)}
+                />
               </div>
-            </div>
+
+              <div className="pt-2">
+                <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                  Duration: <span className="text-primary font-bold">{durationHours} Hours</span>
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {[1, 2, 4, 8].map((h) => (
+                    <Button
+                      key={h}
+                      type="button"
+                      variant={durationHours === h ? 'primary' : 'outline'}
+                      size="sm"
+                      onClick={() => setDurationHours(h)}
+                      className="font-semibold"
+                    >
+                      {h} {h === 1 ? 'Hour' : h === 8 ? 'Full Day (8 hrs)' : 'Hours'}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
           </Card>
 
           {/* Add-ons selector */}
           <Card>
-            <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#fff', marginBottom: '16px' }}>
-              2. Optional Add-ons & Equipment
-            </h3>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <CardHeader className="pb-4">
+              <CardTitle className="text-base font-bold">2. Optional Add-ons & Equipment</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
               {workspace?.availableAddOns?.map((addon) => {
                 const isSelected = (selectedAddOns[addon.id] || 0) > 0;
                 return (
                   <div
                     key={addon.id}
-                    onClick={() => toggleAddon(addon.id, addon.price)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: '14px',
-                      borderRadius: theme.radius.md,
-                      backgroundColor: isSelected ? theme.colors.primaryLight : theme.colors.surface,
-                      border: `1px solid ${isSelected ? theme.colors.primary : theme.colors.border}`,
-                      cursor: 'pointer',
-                      transition: 'all 0.15s ease',
-                    }}
+                    onClick={() => toggleAddon(addon.id)}
+                    className={cn(
+                      'flex items-center justify-between p-3.5 rounded-xl border transition-all cursor-pointer select-none',
+                      isSelected
+                        ? 'border-primary/50 bg-primary/10'
+                        : 'border-border/80 bg-background/50 hover:bg-muted/40'
+                    )}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div className="flex items-center gap-3">
                       <div
-                        style={{
-                          width: '20px',
-                          height: '20px',
-                          borderRadius: '4px',
-                          border: `2px solid ${isSelected ? theme.colors.primary : theme.colors.textDim}`,
-                          backgroundColor: isSelected ? theme.colors.primary : 'transparent',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          color: '#fff',
-                        }}
+                        className={cn(
+                          'h-5 w-5 rounded-md border flex items-center justify-center transition-colors',
+                          isSelected
+                            ? 'bg-primary border-primary text-primary-foreground'
+                            : 'border-muted-foreground/40 bg-transparent'
+                        )}
                       >
-                        {isSelected && <Check size={14} />}
+                        {isSelected && <Check className="h-3.5 w-3.5" />}
                       </div>
                       <div>
-                        <div style={{ fontSize: '14px', fontWeight: 600, color: '#fff' }}>{addon.name}</div>
-                        <div style={{ fontSize: '12px', color: theme.colors.textDim }}>{addon.description}</div>
+                        <div className="text-sm font-semibold text-foreground">{addon.name}</div>
+                        <div className="text-xs text-muted-foreground">{addon.description}</div>
                       </div>
                     </div>
-                    <span style={{ fontSize: '14px', fontWeight: 700, color: theme.colors.text }}>
-                      +₱{addon.price}
-                    </span>
+                    <span className="text-sm font-bold text-foreground">+₱{addon.price}</span>
                   </div>
                 );
               })}
-            </div>
+            </CardContent>
           </Card>
 
           {/* Special Requests */}
           <Card>
-            <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#fff', marginBottom: '12px' }}>
-              3. Special Instructions (Optional)
-            </h3>
-            <Input
-              placeholder="e.g. Need HDMI cable adapter, extra chair, quiet corner..."
-              value={specialRequests}
-              onChange={(e) => setSpecialRequests(e.target.value)}
-              style={{ marginBottom: 0 }}
-            />
+            <CardHeader className="pb-4">
+              <CardTitle className="text-base font-bold">3. Special Instructions (Optional)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Input
+                placeholder="e.g. Need HDMI cable adapter, extra chair, quiet corner..."
+                value={specialRequests}
+                onChange={(e) => setSpecialRequests(e.target.value)}
+              />
+            </CardContent>
           </Card>
         </div>
 
         {/* Right Summary Card */}
         <div>
-          <Card style={{ position: 'sticky', top: '90px' }}>
-            <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#fff', marginBottom: '16px', paddingBottom: '12px', borderBottom: `1px solid ${theme.colors.border}` }}>
-              Reservation Summary
-            </h3>
+          <Card className="sticky top-24 shadow-xl border-border/80">
+            <CardHeader className="border-b border-border/80 pb-4">
+              <CardTitle className="text-base font-bold">Reservation Summary</CardTitle>
+            </CardHeader>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13px', marginBottom: '16px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', color: theme.colors.textMuted }}>
+            <CardContent className="space-y-3 pt-4 text-xs">
+              <div className="flex justify-between text-muted-foreground">
                 <span>Workspace:</span>
-                <span style={{ color: '#fff', fontWeight: 600 }}>{workspace?.name}</span>
+                <span className="text-foreground font-semibold">{workspace?.name}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', color: theme.colors.textMuted }}>
+              <div className="flex justify-between text-muted-foreground">
                 <span>Date:</span>
-                <span style={{ color: '#fff' }}>{selectedDate}</span>
+                <span className="text-foreground font-medium">{selectedDate}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', color: theme.colors.textMuted }}>
+              <div className="flex justify-between text-muted-foreground">
                 <span>Time Slot:</span>
-                <span style={{ color: '#fff' }}>{selectedHour} ({durationHours} hrs)</span>
+                <span className="text-foreground font-medium">
+                  {selectedHour} ({durationHours} hrs)
+                </span>
               </div>
-            </div>
 
-            <div style={{ borderTop: `1px solid ${theme.colors.border}`, paddingTop: '12px', marginBottom: '16px', fontSize: '13px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                <span style={{ color: theme.colors.textMuted }}>Desk rate (₱{hourlyRate} × {durationHours}h):</span>
-                <span>₱{workspaceSubtotal.toLocaleString()}</span>
-              </div>
-              {addOnsTotal > 0 && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                  <span style={{ color: theme.colors.textMuted }}>Selected Add-ons:</span>
-                  <span>₱{addOnsTotal.toLocaleString()}</span>
+              <div className="border-t border-border/80 pt-3 space-y-2">
+                <div className="flex justify-between text-muted-foreground">
+                  <span>Desk rate (₱{hourlyRate} × {durationHours}h):</span>
+                  <span className="text-foreground">₱{workspaceSubtotal.toLocaleString()}</span>
                 </div>
-              )}
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '12px', paddingTop: '12px', borderTop: `1px solid ${theme.colors.border}`, fontSize: '18px', fontWeight: 800 }}>
-                <span>Total Amount:</span>
-                <span style={{ color: theme.colors.primary }}>₱{grandTotal.toLocaleString()}</span>
+                {addOnsTotal > 0 && (
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>Selected Add-ons:</span>
+                    <span className="text-foreground">₱{addOnsTotal.toLocaleString()}</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-baseline pt-3 border-t border-border/80 text-base font-black">
+                  <span className="text-foreground">Total Amount:</span>
+                  <span className="text-primary text-xl">₱{grandTotal.toLocaleString()}</span>
+                </div>
               </div>
-            </div>
 
-            <Button
-              variant="primary"
-              size="lg"
-              style={{ width: '100%' }}
-              isLoading={isLoading}
-              onClick={handleBookingSubmit}
-            >
-              Proceed to Payment
-            </Button>
+              <Button
+                variant="primary"
+                size="lg"
+                className="w-full mt-4 font-bold shadow-lg shadow-primary/20"
+                isLoading={isLoading}
+                onClick={handleBookingSubmit}
+              >
+                Proceed to Payment
+              </Button>
+            </CardContent>
           </Card>
         </div>
       </div>

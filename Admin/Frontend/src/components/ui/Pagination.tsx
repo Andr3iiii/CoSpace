@@ -1,13 +1,14 @@
 import React from 'react';
 import { Button } from './Button';
-import { theme } from '../../theme/theme';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export interface PaginationProps {
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
   totalItems?: number;
+  className?: string;
 }
 
 export const Pagination: React.FC<PaginationProps> = ({
@@ -15,40 +16,37 @@ export const Pagination: React.FC<PaginationProps> = ({
   totalPages,
   onPageChange,
   totalItems,
+  className,
 }) => {
   if (totalPages <= 1) return null;
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginTop: '16px',
-        padding: '8px 0',
-      }}
-    >
-      <span style={{ fontSize: theme.typography.fontSize.xs, color: theme.colors.textDim }}>
-        {totalItems ? `Showing page ${currentPage} of ${totalPages} (${totalItems} total)` : `Page ${currentPage} of ${totalPages}`}
+    <div className={cn('flex items-center justify-between py-4', className)}>
+      <span className="text-xs text-muted-foreground">
+        {totalItems
+          ? `Showing page ${currentPage} of ${totalPages} (${totalItems} total)`
+          : `Page ${currentPage} of ${totalPages}`}
       </span>
-      <div style={{ display: 'flex', gap: '8px' }}>
+      <div className="flex items-center gap-2">
         <Button
-          variant="secondary"
+          variant="outline"
           size="sm"
           disabled={currentPage <= 1}
           onClick={() => onPageChange(currentPage - 1)}
-          leftIcon={<ChevronLeft size={16} />}
+          className="gap-1.5"
         >
-          Previous
+          <ChevronLeft className="h-4 w-4" />
+          <span>Previous</span>
         </Button>
         <Button
-          variant="secondary"
+          variant="outline"
           size="sm"
           disabled={currentPage >= totalPages}
           onClick={() => onPageChange(currentPage + 1)}
-          rightIcon={<ChevronRight size={16} />}
+          className="gap-1.5"
         >
-          Next
+          <span>Next</span>
+          <ChevronRight className="h-4 w-4" />
         </Button>
       </div>
     </div>

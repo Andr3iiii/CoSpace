@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { dashboardApi } from '../../api/dashboard.api';
 import { DashboardKpis } from '../../types';
 import { Card } from '../../components/ui/Card';
-import { Badge } from '../../components/ui/Badge';
+import { Badge, StatusBadge } from '../../components/ui/Badge';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { theme } from '../../theme/theme';
 import { useResponsive } from '../../hooks/useResponsive';
@@ -295,9 +295,9 @@ export const DashboardPage: React.FC = () => {
                     <td style={{ padding: '12px', color: theme.colors.textMuted }}>{act.workspace_name}</td>
                     <td style={{ padding: '12px', color: theme.colors.text, fontWeight: 600 }}>₱{parseFloat(act.final_amount).toLocaleString()}</td>
                     <td style={{ padding: '12px' }}>
-                      <Badge variant={act.status === 'confirmed' ? 'success' : act.status === 'pending' ? 'warning' : 'neutral'}>
+                      <StatusBadge status={act.status}>
                         {act.status}
-                      </Badge>
+                      </StatusBadge>
                     </td>
                   </tr>
                 ))
