@@ -113,17 +113,11 @@ export class ClientWorkspaceRepository {
   }
 
   async checkSlotAvailability(workspaceId: string, startTime: Date, endTime: Date): Promise<boolean> {
-    const overlapping = await query(
-      `SELECT id FROM bookings 
-       WHERE workspace_id = $1 
-         AND status IN ('pending', 'confirmed', 'active')
-         AND (
-           (start_time < $3 AND end_time > $2)
-         )
-       LIMIT 1`,
+    const rows = await query<{ is_available: boolean }>(
+      `SELECT fn_check_workspace_availability($1::uuid, $2::timestamptz, $3::timestamptz) AS is_available`,
       [workspaceId, startTime, endTime]
     );
-    return overlapping.length === 0;
+    return Boolean(rows[0]?.is_available);
   }
 }
 

@@ -1,4 +1,15 @@
-const BASE_URL = import.meta.env.VITE_ADMIN_API_URL || 'http://localhost:3002/api/admin';
+function getBaseUrl(): string {
+  const envUrl = import.meta.env.VITE_ADMIN_API_URL;
+  if (typeof window !== 'undefined') {
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    if (!isLocalhost || !envUrl) {
+      return '/api/admin';
+    }
+  }
+  return envUrl || 'http://localhost:3002/api/admin';
+}
+
+const BASE_URL = getBaseUrl();
 
 export interface RequestOptions extends RequestInit {
   params?: Record<string, any>;

@@ -1,0 +1,34 @@
+# ==============================================================================
+# Cloudflare Tunnel Configuration — CoSpace Monorepo
+# Used by cloudflared daemon to route public HTTPS traffic to local services
+# ==============================================================================
+
+# Tunnel UUID (generated via: cloudflared tunnel create cospace-tunnel)
+# tunnel: YOUR_TUNNEL_UUID
+# credentials-file: /path/to/YOUR_TUNNEL_UUID.json
+
+ingress:
+  # 1. Client Application (Frontend + Client API)
+  - hostname: cospace.yourdomain.com
+    path: /api/client/*
+    service: http://localhost:3001
+  - hostname: cospace.yourdomain.com
+    service: http://localhost:5173
+
+  # 2. Dedicated Client API Domain (Optional)
+  - hostname: api.cospace.yourdomain.com
+    service: http://localhost:3001
+
+  # 3. Admin Application (Admin Dashboard + Admin API)
+  - hostname: admin.cospace.yourdomain.com
+    path: /api/admin/*
+    service: http://localhost:3002
+  - hostname: admin.cospace.yourdomain.com
+    service: http://localhost:5174
+
+  # 4. Dedicated Admin API Domain (Optional)
+  - hostname: admin-api.cospace.yourdomain.com
+    service: http://localhost:3002
+
+  # 5. Fallback catch-all rule (Required by Cloudflare)
+  - service: http_status:404

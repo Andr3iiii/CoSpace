@@ -42,5 +42,9 @@ export const config = {
   },
   adminUrl: process.env.ADMIN_FRONTEND_URL || process.env.ADMIN_URL || 'http://localhost:5174',
   clientUrl: process.env.CLIENT_FRONTEND_URL || process.env.CLIENT_URL || 'http://localhost:5173',
+  allowedOrigins: (process.env.ALLOWED_ORIGINS || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean),
 };
 

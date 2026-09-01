@@ -3,15 +3,14 @@ import { Link } from 'react-router-dom';
 import { bookingApi } from '../../api/booking.api';
 import { useAuth } from '../../stores/AuthContext';
 import { Booking } from '../../types';
-import { Card } from '../../components/ui/Card';
+import { Card, CardContent } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
-import { Badge, StatusBadge } from '../../components/ui/Badge';
+import { StatusBadge } from '../../components/ui/Badge';
 import { Tabs } from '../../components/ui/Tabs';
 import { Dialog } from '../../components/ui/Dialog';
 import { AlertDialog } from '../../components/ui/AlertDialog';
 import { Skeleton } from '../../components/ui/Skeleton';
-import { theme } from '../../theme/theme';
-import { QrCode, Calendar, Clock, MapPin, XCircle, ArrowRight } from 'lucide-react';
+import { QrCode, Calendar, Clock, MapPin, XCircle, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { format } from 'date-fns';
 
 export const MyBookingsPage: React.FC = () => {
@@ -65,13 +64,13 @@ export const MyBookingsPage: React.FC = () => {
   });
 
   return (
-    <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '32px 24px', width: '100%' }}>
-      <div style={{ marginBottom: '28px' }}>
-        <h1 style={{ fontSize: '28px', fontWeight: 800, color: '#fff', marginBottom: '6px' }}>
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 w-full space-y-6">
+      <div>
+        <h1 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
           My Reservations
         </h1>
-        <p style={{ fontSize: '14px', color: theme.colors.textMuted }}>
-          Manage your upcoming workspace sessions and view check-in passes
+        <p className="text-sm text-muted-foreground mt-1">
+          Manage your upcoming workspace sessions and view digital check-in passes
         </p>
       </div>
 
@@ -87,74 +86,60 @@ export const MyBookingsPage: React.FC = () => {
       />
 
       {isLoading ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <Skeleton height="120px" borderRadius="12px" />
-          <Skeleton height="120px" borderRadius="12px" />
+        <div className="space-y-4">
+          <Skeleton className="h-28 w-full rounded-2xl" />
+          <Skeleton className="h-28 w-full rounded-2xl" />
         </div>
       ) : filteredBookings.length === 0 ? (
-        <Card style={{ textAlign: 'center', padding: '48px 24px' }}>
-          <Calendar size={40} color={theme.colors.textDim} style={{ margin: '0 auto 12px auto' }} />
-          <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#fff', marginBottom: '6px' }}>
-            No {activeTab} bookings found
-          </h3>
-          <p style={{ fontSize: '13px', color: theme.colors.textDim, marginBottom: '20px' }}>
-            Need a productive place to work today? Reserve a desk or meeting room now.
+        <Card className="text-center py-16 px-4">
+          <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-3 opacity-60" />
+          <h3 className="text-lg font-bold text-foreground">No {activeTab} bookings found</h3>
+          <p className="text-sm text-muted-foreground max-w-sm mx-auto mt-1 mb-6">
+            Need a productive place to work today? Reserve a desk or meeting room in seconds.
           </p>
-          <Link to="/workspaces" style={{ textDecoration: 'none' }}>
-            <Button variant="primary">Browse Workspaces</Button>
+          <Link to="/workspaces">
+            <Button variant="primary" size="md">
+              Browse Workspaces
+            </Button>
           </Link>
         </Card>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div className="space-y-4">
           {filteredBookings.map((b) => (
-            <Card key={b.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <div
-                  style={{
-                    width: '48px',
-                    height: '48px',
-                    borderRadius: theme.radius.md,
-                    backgroundColor: theme.colors.primaryLight,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: theme.colors.primary,
-                    flexShrink: 0,
-                  }}
-                >
-                  <Calendar size={24} />
+            <Card key={b.id} className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-border/80 hover:border-border transition-colors">
+              <div className="flex items-start gap-4">
+                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                  <Calendar className="h-6 w-6" />
                 </div>
 
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
-                    <span style={{ fontWeight: 700, color: '#fff', fontSize: '16px' }}>{b.workspace_name}</span>
-                    <StatusBadge status={b.status}>
-                      {b.status}
-                    </StatusBadge>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    <span className="font-bold text-base text-foreground">{b.workspace_name}</span>
+                    <StatusBadge status={b.status} />
                   </div>
-                  <div style={{ fontSize: '13px', color: theme.colors.textMuted }}>
+                  <p className="text-xs text-muted-foreground">
                     {format(new Date(b.start_time), 'EEEE, MMMM dd, yyyy')} • {format(new Date(b.start_time), 'hh:mm a')} - {format(new Date(b.end_time), 'hh:mm a')}
-                  </div>
-                  <div style={{ fontSize: '12px', color: theme.colors.textDim, marginTop: '2px' }}>
-                    Ref: <strong style={{ color: theme.colors.primary }}>{b.booking_reference}</strong> • Amount: ₱{parseFloat(String(b.final_amount)).toLocaleString()}
-                  </div>
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Ref: <strong className="text-primary font-mono">{b.booking_reference}</strong> • Amount: ₱{parseFloat(String(b.final_amount)).toLocaleString()}
+                  </p>
                 </div>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div className="flex items-center gap-2.5 self-end sm:self-center flex-wrap">
                 {b.status === 'confirmed' && (
                   <Button
                     variant="secondary"
                     size="sm"
-                    leftIcon={<QrCode size={16} />}
                     onClick={() => setQrModalBooking(b)}
                   >
+                    <QrCode className="h-4 w-4 mr-1.5" />
                     View QR Pass
                   </Button>
                 )}
 
                 {b.status === 'pending' && (
-                  <Link to={`/payment/${b.id}`} style={{ textDecoration: 'none' }}>
+                  <Link to={`/payment/${b.id}`}>
                     <Button variant="primary" size="sm">
                       Complete Payment
                     </Button>
@@ -165,7 +150,7 @@ export const MyBookingsPage: React.FC = () => {
                   <Button
                     variant="ghost"
                     size="sm"
-                    style={{ color: theme.colors.danger }}
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
                     onClick={() => setCancellingBooking(b)}
                   >
                     Cancel
@@ -183,34 +168,25 @@ export const MyBookingsPage: React.FC = () => {
           isOpen={true}
           onClose={() => setQrModalBooking(null)}
           title="Digital Check-in Pass"
-          maxWidth="420px"
         >
-          <div style={{ textAlign: 'center', padding: '12px 0' }}>
-            <div
-              style={{
-                display: 'inline-flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                padding: '16px',
-                backgroundColor: '#FFFFFF',
-                borderRadius: theme.radius.md,
-                marginBottom: '16px',
-              }}
-            >
-              <QrCode size={160} color="#0F172A" />
-              <span style={{ fontSize: '14px', fontWeight: 800, color: '#0F172A', marginTop: '8px' }}>
+          <div className="text-center py-4 space-y-4">
+            <div className="inline-flex flex-col items-center p-4 bg-white rounded-2xl shadow-md">
+              <QrCode className="h-40 w-40 text-slate-900" />
+              <span className="text-sm font-black text-slate-900 mt-2 tracking-widest font-mono">
                 {qrModalBooking.check_in_code}
               </span>
             </div>
 
-            <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#fff', marginBottom: '4px' }}>
-              {qrModalBooking.workspace_name}
-            </h3>
-            <p style={{ fontSize: '13px', color: theme.colors.textDim, marginBottom: '16px' }}>
-              {format(new Date(qrModalBooking.start_time), 'PPpp')}
-            </p>
+            <div>
+              <h3 className="text-base font-bold text-foreground">
+                {qrModalBooking.workspace_name}
+              </h3>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {format(new Date(qrModalBooking.start_time), 'PPpp')}
+              </p>
+            </div>
 
-            <Button variant="secondary" onClick={() => setQrModalBooking(null)} style={{ width: '100%' }}>
+            <Button variant="secondary" size="md" className="w-full" onClick={() => setQrModalBooking(null)}>
               Close Pass
             </Button>
           </div>

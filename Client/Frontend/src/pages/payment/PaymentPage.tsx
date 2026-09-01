@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { bookingApi } from '../../api/booking.api';
 import { paymentApi } from '../../api/payment.api';
 import { Booking } from '../../types';
-import { Card } from '../../components/ui/Card';
+import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
-import { theme } from '../../theme/theme';
-import { CreditCard, Smartphone, CheckCircle, ShieldCheck, Lock, AlertCircle } from 'lucide-react';
+import { CreditCard, Smartphone, CheckCircle, ShieldCheck, Lock, AlertCircle, ArrowLeft } from 'lucide-react';
 import { format } from 'date-fns';
 
 export const PaymentPage: React.FC = () => {
@@ -52,165 +51,166 @@ export const PaymentPage: React.FC = () => {
 
   if (!booking) {
     return (
-      <div style={{ maxWidth: '600px', margin: '80px auto', textAlign: 'center', color: theme.colors.textMuted }}>
+      <div className="max-w-md mx-auto my-24 text-center px-4 py-8 text-sm text-muted-foreground">
         Loading reservation checkout...
       </div>
     );
   }
 
+  const finalAmount = parseFloat(String(booking.final_amount || booking.total_amount || 0));
+
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 24px', width: '100%' }}>
-      <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-        <h1 style={{ fontSize: '28px', fontWeight: 800, color: '#fff', marginBottom: '6px' }}>
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 w-full space-y-6">
+      <Link
+        to="/bookings"
+        className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <ArrowLeft className="h-4 w-4" /> Back to reservations
+      </Link>
+
+      <div className="text-center space-y-1.5">
+        <h1 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
           Complete Your Reservation
         </h1>
-        <p style={{ fontSize: '14px', color: theme.colors.textMuted }}>
-          Secure payment transaction via PayMongo Gateway
+        <p className="text-sm text-muted-foreground">
+          Secure payment transaction powered by PayMongo Gateway
         </p>
       </div>
 
       {errorMessage && (
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-            padding: '14px',
-            borderRadius: theme.radius.md,
-            backgroundColor: theme.colors.dangerBg,
-            border: `1px solid ${theme.colors.dangerBorder}`,
-            color: theme.colors.danger,
-            fontSize: '14px',
-            marginBottom: '24px',
-          }}
-        >
-          <AlertCircle size={20} style={{ flexShrink: 0 }} />
+        <div className="flex items-center gap-2.5 rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive animate-in fade-in-50">
+          <AlertCircle className="h-5 w-5 shrink-0" />
           <span>{errorMessage}</span>
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Payment Methods */}
-        <Card>
-          <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#fff', marginBottom: '16px' }}>
-            Select Payment Method
-          </h3>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
+        <Card className="border-border/80">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-bold">Select Payment Method</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
             {/* GCash */}
-            <div
+            <button
+              type="button"
+              className={`w-full flex items-center justify-between p-4 rounded-xl border text-left transition-all cursor-pointer ${
+                paymentMethod === 'gcash'
+                  ? 'border-primary bg-primary/10 shadow-sm'
+                  : 'border-border/80 bg-card hover:bg-muted/40'
+              }`}
               onClick={() => setPaymentMethod('gcash')}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '14px',
-                borderRadius: theme.radius.md,
-                backgroundColor: paymentMethod === 'gcash' ? theme.colors.primaryLight : theme.colors.surface,
-                border: `1px solid ${paymentMethod === 'gcash' ? theme.colors.primary : theme.colors.border}`,
-                cursor: 'pointer',
-              }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <Smartphone size={20} color={paymentMethod === 'gcash' ? theme.colors.primary : theme.colors.textDim} />
-                <span style={{ fontWeight: 600, color: '#fff', fontSize: '14px' }}>GCash E-Wallet</span>
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500">
+                  <Smartphone className="h-5 w-5" />
+                </div>
+                <div>
+                  <span className="font-bold text-sm text-foreground block">GCash E-Wallet</span>
+                  <span className="text-xs text-muted-foreground">Instant zero-fee checkout</span>
+                </div>
               </div>
-              <div style={{ width: '16px', height: '16px', borderRadius: '50%', border: `2px solid ${paymentMethod === 'gcash' ? theme.colors.primary : theme.colors.textDim}`, backgroundColor: paymentMethod === 'gcash' ? theme.colors.primary : 'transparent' }} />
-            </div>
-
-            {/* GrabPay */}
-            <div
-              onClick={() => setPaymentMethod('grab_pay')}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '14px',
-                borderRadius: theme.radius.md,
-                backgroundColor: paymentMethod === 'grab_pay' ? theme.colors.primaryLight : theme.colors.surface,
-                border: `1px solid ${paymentMethod === 'grab_pay' ? theme.colors.primary : theme.colors.border}`,
-                cursor: 'pointer',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <Smartphone size={20} color={paymentMethod === 'grab_pay' ? theme.colors.primary : theme.colors.textDim} />
-                <span style={{ fontWeight: 600, color: '#fff', fontSize: '14px' }}>GrabPay</span>
+              <div className={`h-4 w-4 rounded-full border flex items-center justify-center ${paymentMethod === 'gcash' ? 'border-primary bg-primary' : 'border-muted-foreground'}`}>
+                {paymentMethod === 'gcash' && <div className="h-2 w-2 rounded-full bg-primary-foreground" />}
               </div>
-              <div style={{ width: '16px', height: '16px', borderRadius: '50%', border: `2px solid ${paymentMethod === 'grab_pay' ? theme.colors.primary : theme.colors.textDim}`, backgroundColor: paymentMethod === 'grab_pay' ? theme.colors.primary : 'transparent' }} />
-            </div>
+            </button>
 
             {/* Credit/Debit Card */}
-            <div
+            <button
+              type="button"
+              className={`w-full flex items-center justify-between p-4 rounded-xl border text-left transition-all cursor-pointer ${
+                paymentMethod === 'card'
+                  ? 'border-primary bg-primary/10 shadow-sm'
+                  : 'border-border/80 bg-card hover:bg-muted/40'
+              }`}
               onClick={() => setPaymentMethod('card')}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '14px',
-                borderRadius: theme.radius.md,
-                backgroundColor: paymentMethod === 'card' ? theme.colors.primaryLight : theme.colors.surface,
-                border: `1px solid ${paymentMethod === 'card' ? theme.colors.primary : theme.colors.border}`,
-                cursor: 'pointer',
-              }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <CreditCard size={20} color={paymentMethod === 'card' ? theme.colors.primary : theme.colors.textDim} />
-                <span style={{ fontWeight: 600, color: '#fff', fontSize: '14px' }}>Credit / Debit Card</span>
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500">
+                  <CreditCard className="h-5 w-5" />
+                </div>
+                <div>
+                  <span className="font-bold text-sm text-foreground block">Credit / Debit Card</span>
+                  <span className="text-xs text-muted-foreground">Visa, Mastercard, JCB</span>
+                </div>
               </div>
-              <div style={{ width: '16px', height: '16px', borderRadius: '50%', border: `2px solid ${paymentMethod === 'card' ? theme.colors.primary : theme.colors.textDim}`, backgroundColor: paymentMethod === 'card' ? theme.colors.primary : 'transparent' }} />
-            </div>
-          </div>
+              <div className={`h-4 w-4 rounded-full border flex items-center justify-center ${paymentMethod === 'card' ? 'border-primary bg-primary' : 'border-muted-foreground'}`}>
+                {paymentMethod === 'card' && <div className="h-2 w-2 rounded-full bg-primary-foreground" />}
+              </div>
+            </button>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: theme.colors.textDim }}>
-            <Lock size={14} /> 256-bit SSL encrypted transaction
-          </div>
+            {/* GrabPay */}
+            <button
+              type="button"
+              className={`w-full flex items-center justify-between p-4 rounded-xl border text-left transition-all cursor-pointer ${
+                paymentMethod === 'grab_pay'
+                  ? 'border-primary bg-primary/10 shadow-sm'
+                  : 'border-border/80 bg-card hover:bg-muted/40'
+              }`}
+              onClick={() => setPaymentMethod('grab_pay')}
+            >
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-lg bg-green-500/10 flex items-center justify-center text-green-500">
+                  <Smartphone className="h-5 w-5" />
+                </div>
+                <div>
+                  <span className="font-bold text-sm text-foreground block">GrabPay E-Wallet</span>
+                  <span className="text-xs text-muted-foreground">Fast QR checkout</span>
+                </div>
+              </div>
+              <div className={`h-4 w-4 rounded-full border flex items-center justify-center ${paymentMethod === 'grab_pay' ? 'border-primary bg-primary' : 'border-muted-foreground'}`}>
+                {paymentMethod === 'grab_pay' && <div className="h-2 w-2 rounded-full bg-primary-foreground" />}
+              </div>
+            </button>
+
+            <div className="pt-3 flex items-center justify-center gap-2 text-xs text-muted-foreground">
+              <ShieldCheck className="h-4 w-4 text-primary" />
+              <span>256-bit SSL Encrypted Payment</span>
+            </div>
+          </CardContent>
         </Card>
 
-        {/* Order Summary */}
-        <Card style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-          <div>
-            <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#fff', marginBottom: '16px', paddingBottom: '12px', borderBottom: `1px solid ${theme.colors.border}` }}>
-              Booking Summary
-            </h3>
+        {/* Order Summary & Pay Action */}
+        <Card className="border-border/80 flex flex-col justify-between">
+          <CardHeader className="pb-3 border-b border-border/60">
+            <CardTitle className="text-base font-bold">Reservation Summary</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-4 space-y-4 flex-1 flex flex-col justify-between">
+            <div className="space-y-3 text-xs">
+              <div className="flex justify-between text-muted-foreground">
+                <span>Workspace</span>
+                <strong className="text-foreground font-semibold">{booking.workspace_name}</strong>
+              </div>
+              <div className="flex justify-between text-muted-foreground">
+                <span>Reference</span>
+                <strong className="text-primary font-mono">{booking.booking_reference}</strong>
+              </div>
+              <div className="flex justify-between text-muted-foreground">
+                <span>Time Slot</span>
+                <span className="text-foreground font-medium">
+                  {format(new Date(booking.start_time), 'MMM dd, hh:mm a')} - {format(new Date(booking.end_time), 'hh:mm a')}
+                </span>
+              </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13px', marginBottom: '16px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', color: theme.colors.textMuted }}>
-                <span>Reference:</span>
-                <span style={{ color: theme.colors.primary, fontWeight: 700 }}>{booking.booking_reference}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', color: theme.colors.textMuted }}>
-                <span>Space:</span>
-                <span style={{ color: '#fff' }}>{booking.workspace_name}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', color: theme.colors.textMuted }}>
-                <span>Date:</span>
-                <span style={{ color: '#fff' }}>{format(new Date(booking.start_time), 'MMM dd, yyyy')}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', color: theme.colors.textMuted }}>
-                <span>Schedule:</span>
-                <span style={{ color: '#fff' }}>
-                  {format(new Date(booking.start_time), 'hh:mm a')} - {format(new Date(booking.end_time), 'hh:mm a')}
+              <div className="pt-3 border-t border-border/60 flex justify-between items-baseline">
+                <span className="text-sm font-bold text-foreground">Total Payable</span>
+                <span className="text-2xl font-black text-primary">
+                  ₱{finalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                 </span>
               </div>
             </div>
 
-            <div style={{ borderTop: `1px solid ${theme.colors.border}`, paddingTop: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-              <span style={{ fontSize: '15px', fontWeight: 600, color: '#fff' }}>Amount to Pay:</span>
-              <span style={{ fontSize: '24px', fontWeight: 800, color: theme.colors.primary }}>
-                ₱{parseFloat(String(booking.final_amount)).toLocaleString()}
-              </span>
-            </div>
-          </div>
-
-          <Button
-            variant="primary"
-            size="lg"
-            isLoading={isLoading}
-            onClick={handlePay}
-            style={{ width: '100%', marginTop: '24px' }}
-          >
-            Authorize Payment (₱{parseFloat(String(booking.final_amount)).toLocaleString()})
-          </Button>
+            <Button
+              variant="primary"
+              size="lg"
+              className="w-full mt-4 shadow-lg shadow-primary/25"
+              isLoading={isLoading}
+              onClick={handlePay}
+            >
+              <Lock className="h-4 w-4 mr-2" />
+              Pay ₱{finalAmount.toLocaleString()} Now
+            </Button>
+          </CardContent>
         </Card>
       </div>
     </div>

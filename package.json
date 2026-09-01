@@ -11,6 +11,7 @@
   ],
   "scripts": {
     "dev": "concurrently --kill-others -n \"ADMIN-FE,ADMIN-BE,CLIENT-FE,CLIENT-BE\" -c \"blue,cyan,green,yellow\" \"npm run dev --prefix Admin/Frontend\" \"npm run dev --prefix Admin/Backend\" \"npm run dev --prefix Client/Frontend\" \"npm run dev --prefix Client/Backend\"",
+    "dev:share": "concurrently --kill-others -n \"ADMIN-FE,ADMIN-BE,CLIENT-FE,CLIENT-BE,CLOUDFLARE\" -c \"blue,cyan,green,yellow,magenta\" \"npm run dev --prefix Admin/Frontend\" \"npm run dev --prefix Admin/Backend\" \"npm run dev --prefix Client/Frontend\" \"npm run dev --prefix Client/Backend\" \"node scripts/cloudflare-tunnel.js client\"",
     "dev:admin": "concurrently --kill-others -n \"ADMIN-FE,ADMIN-BE\" -c \"blue,cyan\" \"npm run dev --prefix Admin/Frontend\" \"npm run dev --prefix Admin/Backend\"",
     "dev:client": "concurrently --kill-others -n \"CLIENT-FE,CLIENT-BE\" -c \"green,yellow\" \"npm run dev --prefix Client/Frontend\" \"npm run dev --prefix Client/Backend\"",
     "build": "npm run build --prefix Admin/Frontend && npm run build --prefix Admin/Backend && npm run build --prefix Client/Frontend && npm run build --prefix Client/Backend",
@@ -19,10 +20,14 @@
     "format": "echo \"Formatting all workspaces...\"",
     "db:migrate": "node Database/scripts/migrate.js",
     "db:seed": "node Database/scripts/seed.js",
-    "db:reset": "node Database/scripts/reset.js"
+    "db:reset": "node Database/scripts/reset.js",
+    "tunnel": "node scripts/cloudflare-tunnel.js client",
+    "tunnel:client": "node scripts/cloudflare-tunnel.js client",
+    "tunnel:admin": "node scripts/cloudflare-tunnel.js admin"
   },
   "devDependencies": {
-    "concurrently": "^9.1.2"
+    "concurrently": "^9.1.2",
+    "untun": "^0.2.2"
   },
   "keywords": [
     "cospace",

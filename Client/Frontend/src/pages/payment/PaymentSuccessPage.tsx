@@ -2,9 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { bookingApi } from '../../api/booking.api';
 import { Booking } from '../../types';
-import { Card } from '../../components/ui/Card';
+import { Card, CardContent } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
-import { theme } from '../../theme/theme';
 import { CheckCircle2, QrCode, Calendar, MapPin, Download, ArrowRight } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -27,102 +26,71 @@ export const PaymentSuccessPage: React.FC = () => {
   }, [bookingId]);
 
   return (
-    <div style={{ maxWidth: '640px', margin: '40px auto', padding: '0 24px', width: '100%' }}>
-      <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-        <div
-          style={{
-            width: '64px',
-            height: '64px',
-            borderRadius: '50%',
-            backgroundColor: theme.colors.successBg,
-            border: `2px solid ${theme.colors.successBorder}`,
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: theme.colors.success,
-            marginBottom: '16px',
-          }}
-        >
-          <CheckCircle2 size={36} />
+    <div className="max-w-xl mx-auto px-4 py-12 w-full space-y-6">
+      <div className="text-center space-y-3">
+        <div className="h-16 w-16 rounded-full bg-emerald-500/10 border-2 border-emerald-500 flex items-center justify-center text-emerald-500 mx-auto shadow-lg shadow-emerald-500/20">
+          <CheckCircle2 className="h-9 w-9" />
         </div>
-        <h1 style={{ fontSize: '28px', fontWeight: 800, color: '#fff', marginBottom: '6px' }}>
+        <h1 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
           Booking Confirmed!
         </h1>
-        <p style={{ fontSize: '14px', color: theme.colors.textMuted }}>
-          Your payment has cleared. Show your check-in code upon arrival.
+        <p className="text-sm text-muted-foreground">
+          Your payment has cleared. Show your digital check-in pass upon arrival.
         </p>
       </div>
 
-      <Card style={{ marginBottom: '24px', textAlign: 'center' }}>
-        {/* QR Code Simulation */}
-        <div
-          style={{
-            display: 'inline-flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            padding: '20px',
-            backgroundColor: '#FFFFFF',
-            borderRadius: theme.radius.md,
-            marginBottom: '16px',
-          }}
-        >
-          <QrCode size={160} color="#0F172A" />
-          <span style={{ fontSize: '14px', fontWeight: 800, color: '#0F172A', marginTop: '8px', letterSpacing: '0.05em' }}>
+      <Card className="text-center p-6 border-border/80 shadow-2xl space-y-6">
+        {/* QR Code */}
+        <div className="inline-flex flex-col items-center p-4 bg-white rounded-2xl shadow-md mx-auto">
+          <QrCode className="h-40 w-40 text-slate-900" />
+          <span className="text-sm font-black text-slate-900 mt-2 tracking-widest font-mono">
             {booking?.check_in_code || 'QR-8801-CHK'}
           </span>
         </div>
 
-        <div style={{ fontSize: '12px', color: theme.colors.textDim, marginBottom: '20px' }}>
-          Scan at turnstile entrance or present to receptionist on arrival
-        </div>
+        <p className="text-xs text-muted-foreground">
+          Scan at turnstile entrance or present to front desk reception on arrival
+        </p>
 
-        <div
-          style={{
-            textAlign: 'left',
-            backgroundColor: theme.colors.surface,
-            padding: '16px',
-            borderRadius: theme.radius.md,
-            fontSize: '13px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '8px',
-          }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ color: theme.colors.textMuted }}>Booking Reference:</span>
-            <strong style={{ color: theme.colors.primary }}>{booking?.booking_reference || 'CSP-2026-XXXX'}</strong>
+        {/* Receipt Details */}
+        <div className="text-left bg-muted/50 p-4 rounded-xl space-y-2.5 text-xs">
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Booking Reference:</span>
+            <strong className="text-primary font-mono">{booking?.booking_reference || 'CSP-2026-XXXX'}</strong>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ color: theme.colors.textMuted }}>Workspace:</span>
-            <strong style={{ color: '#fff' }}>{booking?.workspace_name}</strong>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Workspace:</span>
+            <strong className="text-foreground">{booking?.workspace_name}</strong>
           </div>
           {booking?.start_time && (
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: theme.colors.textMuted }}>Date & Time:</span>
-              <strong style={{ color: '#fff' }}>
-                {format(new Date(booking.start_time), 'MMM dd, yyyy (hh:mm a)')}
-              </strong>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Date & Time:</span>
+              <span className="text-foreground font-medium">
+                {format(new Date(booking.start_time), 'PPp')}
+              </span>
             </div>
           )}
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ color: theme.colors.textMuted }}>Location:</span>
-            <strong style={{ color: '#fff' }}>7th Ave, BGC, Taguig ({booking?.floor || '3rd Floor'})</strong>
+          <div className="flex justify-between pt-2 border-t border-border/60">
+            <span className="text-muted-foreground">Total Paid:</span>
+            <strong className="text-emerald-500 font-bold text-sm">
+              ₱{parseFloat(String(booking?.final_amount || 0)).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+            </strong>
           </div>
         </div>
-      </Card>
 
-      <div style={{ display: 'flex', gap: '12px' }}>
-        <Link to="/bookings" style={{ flex: 1, textDecoration: 'none' }}>
-          <Button variant="primary" size="lg" style={{ width: '100%' }}>
-            View My Bookings
-          </Button>
-        </Link>
-        <Link to="/workspaces" style={{ flex: 1, textDecoration: 'none' }}>
-          <Button variant="secondary" size="lg" style={{ width: '100%' }}>
-            Browse More Spaces
-          </Button>
-        </Link>
-      </div>
+        <div className="pt-2 flex flex-col sm:flex-row gap-3">
+          <Link to="/bookings" className="flex-1">
+            <Button variant="primary" size="md" className="w-full">
+              View All My Bookings
+            </Button>
+          </Link>
+          <Link to="/workspaces" className="flex-1">
+            <Button variant="outline" size="md" className="w-full">
+              Browse More Workspaces
+            </Button>
+          </Link>
+        </div>
+      </Card>
     </div>
   );
 };

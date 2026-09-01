@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../stores/AuthContext';
 import { Button } from '../ui/Button';
@@ -9,15 +9,17 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from '../ui/Dropdown';
-import { Sparkles, Calendar, Bell, User, LogOut } from 'lucide-react';
+import { Sparkles, Calendar, Bell, User, LogOut, Menu, X, Home, Building2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export const Header: React.FC = () => {
   const { client, logout } = useAuth();
   const navigate = useNavigate();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleLogout = async () => {
     await logout();
+    setMobileMenuOpen(false);
     navigate('/');
   };
 
@@ -29,11 +31,19 @@ export const Header: React.FC = () => {
         : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
     );
 
+  const mobileNavLinkClasses = ({ isActive }: { isActive: boolean }) =>
+    cn(
+      'flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium transition-colors',
+      isActive
+        ? 'text-primary font-bold bg-primary/10'
+        : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+    );
+
   return (
     <header className="h-16 border-b border-border/80 bg-background/80 backdrop-blur-md sticky top-0 z-50">
       <div className="max-w-7xl h-full mx-auto px-4 sm:px-6 flex items-center justify-between">
         {/* Brand Logo */}
-        <Link to="/" className="flex items-center gap-2.5 select-none">
+        <Link to="/" className="flex items-center gap-2.5 select-none" onClick={() => setMobileMenuOpen(false)}>
           <div className="h-9 w-9 rounded-xl bg-primary flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/25">
             <Sparkles className="h-5 w-5" />
           </div>
@@ -60,8 +70,8 @@ export const Header: React.FC = () => {
           )}
         </nav>
 
-        {/* Right Auth / Profile Controls */}
-        <div className="flex items-center gap-3">
+        {/* Right Auth / Profile Controls & Mobile Toggle */}
+        <div className="flex items-center gap-2 sm:gap-3">
           {client ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -96,7 +106,7 @@ export const Header: React.FC = () => {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <div className="flex items-center gap-2">
+            <div className="hidden sm:flex items-center gap-2">
               <Link to="/login">
                 <Button variant="ghost" size="sm">
                   Sign In
@@ -109,8 +119,73 @@ export const Header: React.FC = () => {
               </Link>
             </div>
           )}
+
+          {/* Mobile Menu Hamburger Button */}
+          <button
+            type="button"
+            className="md:hidden p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors cursor-pointer"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle Navigation Menu"
+          >
+            {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
         </div>
       </div>
+
+      {/* Mobile Navigation Drawer */}
+      {mobileMenuOpen && (
+        <div className="md:hidden border-b border-border/80 bg-background/95 backdrop-blur-xl px-4 pt-2 pb-6 space-y-2 shadow-2xl animate-in slide-in-from-top-2 duration-200">
+          <nav className="flex flex-col space-y-1">
+            <NavLink to="/" end className={mobileNavLinkClasses} onClick={() => setMobileMenuOpen(false)}>
+              <Home className="h-5 w-5 text-primary" />
+              <span>Home</span>
+            </NavLink>
+            <NavLink to="/workspaces" className={mobileNavLinkClasses} onClick={() => setMobileMenuOpen(false)}>
+              <Building2 className="h-5 w-5 text-primary" />
+              <span>Workspaces</span>
+            </NavLink>
+            {client ? (
+              <>
+                <NavLink to="/bookings" className={mobileNavLinkClasses} onClick={() => setMobileMenuOpen(false)}>
+                  <Calendar className="h-5 w-5 text-primary" />
+                  <span>My Bookings</span>
+                </NavLink>
+                <NavLink to="/notifications" className={mobileNavLinkClasses} onClick={() => setMobileMenuOpen(false)}>
+                  <Bell className="h-5 w-5 text-primary" />
+                  <span>Notifications</span>
+                </NavLink>
+                <NavLink to="/profile" className={mobileNavLinkClasses} onClick={() => setMobileMenuOpen(false)}>
+                  <User className="h-5 w-5 text-primary" />
+                  <span>Profile & Settings</span>
+                </NavLink>
+                <div className="pt-2 border-t border-border/60">
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="flex w-full items-center gap-3 px-4 py-3 rounded-xl text-base font-medium text-destructive hover:bg-destructive/10 transition-colors"
+                  >
+                    <LogOut className="h-5 w-5" />
+                    <span>Sign Out</span>
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="pt-4 flex flex-col gap-2.5 border-t border-border/60">
+                <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
+                  <Button variant="outline" size="md" className="w-full">
+                    Sign In
+                  </Button>
+                </Link>
+                <Link to="/register" onClick={() => setMobileMenuOpen(false)}>
+                  <Button variant="primary" size="md" className="w-full shadow-md shadow-primary/20">
+                    Get Started
+                  </Button>
+                </Link>
+              </div>
+            )}
+          </nav>
+        </div>
+      )}
     </header>
   );
 };

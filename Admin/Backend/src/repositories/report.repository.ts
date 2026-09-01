@@ -57,15 +57,7 @@ export class AdminReportRepository {
     );
 
     const dailyBreakdown = await query(
-      `SELECT 
-        TO_CHAR(d.date, 'YYYY-MM-DD') as date,
-        COUNT(b.id)::int as bookings,
-        COALESCE(SUM(p.amount), 0)::numeric as revenue
-       FROM generate_series(CURRENT_DATE - INTERVAL '14 days', CURRENT_DATE, '1 day'::interval) d(date)
-       LEFT JOIN bookings b ON DATE(b.created_at) = DATE(d.date)
-       LEFT JOIN payments p ON DATE(p.paid_at) = DATE(d.date) AND p.status = 'completed'
-       GROUP BY d.date
-       ORDER BY d.date DESC`
+      'SELECT * FROM fn_get_admin_daily_breakdown(14)'
     );
 
     return {

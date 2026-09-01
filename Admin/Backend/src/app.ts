@@ -13,8 +13,16 @@ app.use(helmet());
 app.use(
   cors({
     origin: (origin, callback) => {
-      // In development or when origin matches ADMIN_URL
-      if (!origin || origin === config.adminUrl || config.nodeEnv === 'development') {
+      // In development or when origin matches ADMIN_URL, allowedOrigins, or Cloudflare tunnels/pages
+      if (
+        !origin ||
+        origin === config.adminUrl ||
+        config.nodeEnv === 'development' ||
+        config.allowedOrigins.includes(origin) ||
+        origin.endsWith('.trycloudflare.com') ||
+        origin.endsWith('.pages.dev') ||
+        origin.endsWith('.workers.dev')
+      ) {
         callback(null, true);
       } else {
         callback(new Error('Blocked by Admin CORS Policy'));

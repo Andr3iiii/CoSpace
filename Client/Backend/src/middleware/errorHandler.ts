@@ -54,7 +54,29 @@ export function errorHandler(
     return;
   }
 
-  // 5. Unhandled / Unexpected Server Error
+  // 5. PostgreSQL Custom Booking Conflict Exception (23P01)
+  if (err.code === '23P01') {
+    sendError(
+      res,
+      err.message || 'The selected time slot was just booked by another member.',
+      409,
+      ERROR_CODES.BOOKING_CONFLICT
+    );
+    return;
+  }
+
+  // 6. PostgreSQL Invalid Parameter / Date Range Exception (22023)
+  if (err.code === '22023') {
+    sendError(
+      res,
+      err.message || 'Invalid request parameter or date interval.',
+      400,
+      ERROR_CODES.VALIDATION_ERROR
+    );
+    return;
+  }
+
+  // 7. Unhandled / Unexpected Server Error
   console.error('Unhandled Client Backend Server Error:', err);
 
   const statusCode = err.statusCode || 500;

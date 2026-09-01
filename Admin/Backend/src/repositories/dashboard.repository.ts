@@ -10,56 +10,25 @@ export class AdminDashboardRepository {
     pendingBookings: number;
     pendingPayments: number;
   }> {
-    // 1. Today's Revenue
-    const rev = await query<{ sum: string }>(
-      `SELECT COALESCE(SUM(amount), 0) AS sum 
-       FROM payments 
-       WHERE status = 'completed' AND paid_at >= CURRENT_DATE`
-    );
+    const rows = await query<{
+      today_revenue: string;
+      today_bookings: number;
+      active_visitors: number;
+      available_workspaces: number;
+      occupancy_rate: number;
+      pending_bookings: number;
+      pending_payments: number;
+    }>('SELECT * FROM fn_get_admin_dashboard_kpis()');
 
-    // 2. Today's Bookings
-    const bks = await query<{ count: string }>(
-      `SELECT COUNT(id) AS count 
-       FROM bookings 
-       WHERE created_at >= CURRENT_DATE`
-    );
-
-    // 3. Active Visitors (checked in today and not checked out)
-    const vis = await query<{ count: string }>(
-      `SELECT COUNT(id) AS count 
-       FROM check_ins 
-       WHERE checked_in_at >= CURRENT_DATE AND checked_out_at IS NULL`
-    );
-
-    // 4. Available Workspaces
-    const ws = await query<{ count: string }>(
-      "SELECT COUNT(id) AS count FROM workspaces WHERE status = 'available'"
-    );
-
-    // 5. Total Workspaces for Occupancy
-    const totalWs = await query<{ count: string }>('SELECT COUNT(id) AS count FROM workspaces');
-    const totalCount = parseInt(totalWs[0]?.count || '1', 10) || 1;
-    const availCount = parseInt(ws[0]?.count || '0', 10);
-    const occupancyRate = Math.round(((totalCount - availCount) / totalCount) * 100);
-
-    // 6. Pending Bookings
-    const pendingBks = await query<{ count: string }>(
-      "SELECT COUNT(id) AS count FROM bookings WHERE status = 'pending'"
-    );
-
-    // 7. Pending Payments
-    const pendingPmts = await query<{ count: string }>(
-      "SELECT COUNT(id) AS count FROM payments WHERE status = 'pending'"
-    );
-
+    const kpi = rows[0];
     return {
-      todayRevenue: parseFloat(rev[0]?.sum || '0'),
-      todayBookings: parseInt(bks[0]?.count || '0', 10),
-      activeVisitors: parseInt(vis[0]?.count || '0', 10),
-      availableWorkspaces: availCount,
-      occupancyRate: occupancyRate >= 0 ? occupancyRate : 0,
-      pendingBookings: parseInt(pendingBks[0]?.count || '0', 10),
-      pendingPayments: parseInt(pendingPmts[0]?.count || '0', 10),
+      todayRevenue: parseFloat(kpi?.today_revenue || '0'),
+      todayBookings: kpi?.today_bookings || 0,
+      activeVisitors: kpi?.active_visitors || 0,
+      availableWorkspaces: kpi?.available_workspaces || 0,
+      occupancyRate: kpi?.occupancy_rate || 0,
+      pendingBookings: kpi?.pending_bookings || 0,
+      pendingPayments: kpi?.pending_payments || 0,
     };
   }
 

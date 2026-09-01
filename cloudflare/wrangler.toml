@@ -1,0 +1,16 @@
+# ==============================================================================
+# Cloudflare Wrangler Configuration — CoSpace Pages & Workers
+# ==============================================================================
+
+name = "cospace"
+compatibility_date = "2024-09-01"
+
+# Client Frontend Pages Build Configuration
+# Deploy via: npx wrangler pages deploy Client/Frontend/dist --project-name=cospace-client
+[env.client]
+pages_build_output_dir = "Client/Frontend/dist"
+
+# Admin Frontend Pages Build Configuration
+# Deploy via: npx wrangler pages deploy Admin/Frontend/dist --project-name=cospace-admin
+[env.admin]
+pages_build_output_dir = "Admin/Frontend/dist"

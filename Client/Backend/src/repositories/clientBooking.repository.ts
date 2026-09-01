@@ -1,6 +1,4 @@
-import { PoolClient } from 'pg';
 import { query } from '../database/connection';
-import { withTransaction } from '../database/transactions';
 import { generateBookingReference, generateCheckInCode } from '../utils/reference';
 import { AppError } from '../utils/errors';
 import { ERROR_CODES } from '../constants';
@@ -79,8 +77,8 @@ export class ClientBookingRepository {
   }
 
   /**
-   * Concurrency-safe atomic booking creation within a PostgreSQL transaction.
-   * Locks the workspace row for update and verifies no overlapping active/confirmed bookings exist.
+   * Concurrency-safe atomic booking creation invoking the PostgreSQL stored function `fn_create_booking_atomic`.
+   * Automatically serializes concurrent reservations, validates active holds, and inserts itemized records atomically.
    */
   async createBookingAtomic(
     clientId: string,
@@ -94,118 +92,82 @@ export class ClientBookingRepository {
       finalAmount: number;
     }
   ): Promise<any> {
-    return withTransaction(async (client: PoolClient) => {
-      // 1. Lock workspace record for concurrency safety
-      const wsCheck = await client.query(
-        'SELECT id, status, name FROM workspaces WHERE id = $1 FOR UPDATE',
-        [input.workspaceId]
+    const bookingReference = generateBookingReference();
+    const checkInCode = generateCheckInCode();
+    const addOnsJson = JSON.stringify(pricing.addOnsList || []);
+
+    try {
+      const rows = await query(
+        `SELECT * FROM fn_create_booking_atomic(
+          $1::uuid,
+          $2::uuid,
+          $3::timestamptz,
+          $4::timestamptz,
+          $5::varchar,
+          $6::varchar,
+          $7::text,
+          $8::numeric,
+          $9::numeric,
+          $10::numeric,
+          $11::numeric,
+          $12::numeric,
+          $13::jsonb
+        )`,
+        [
+          clientId,
+          input.workspaceId,
+          input.startTime,
+          input.endTime,
+          bookingReference,
+          checkInCode,
+          input.specialRequests || null,
+          pricing.hours,
+          pricing.hourlyRate,
+          pricing.workspaceSubtotal,
+          pricing.totalAmount,
+          pricing.finalAmount,
+          addOnsJson,
+        ]
       );
 
-      if (wsCheck.rows.length === 0 || wsCheck.rows[0].status !== 'available') {
-        throw new AppError('This workspace is currently unavailable for booking.', 404, ERROR_CODES.NOT_FOUND);
+      if (!rows || rows.length === 0) {
+        throw new AppError('Failed to initialize booking record.', 500, ERROR_CODES.INTERNAL_ERROR);
       }
 
-      // 2. Strict overlap collision check inside transaction including all active/pending holds
-      const overlapCheck = await client.query(
-        `SELECT id FROM bookings
-         WHERE workspace_id = $1
-           AND status IN ('pending', 'confirmed', 'active')
-           AND (start_time < $3 AND end_time > $2)
-         FOR UPDATE`,
-        [input.workspaceId, input.startTime, input.endTime]
-      );
-
-      if (overlapCheck.rows.length > 0) {
+      return rows[0];
+    } catch (err: any) {
+      if (err.code === '23P01') {
         throw new AppError(
           'The selected time slot was just booked by another member.',
           409,
           ERROR_CODES.BOOKING_CONFLICT
         );
       }
-
-      const bookingReference = generateBookingReference();
-      const checkInCode = generateCheckInCode();
-
-      // 3. Insert primary booking contract
-      const bookingInsert = await client.query(
-        `INSERT INTO bookings 
-          (booking_reference, client_id, workspace_id, start_time, end_time, total_amount, discount_amount, final_amount, status, check_in_code, special_requests)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'pending', $9, $10)
-         RETURNING *`,
-        [
-          bookingReference,
-          clientId,
-          input.workspaceId,
-          input.startTime,
-          input.endTime,
-          pricing.totalAmount,
-          0.0,
-          pricing.finalAmount,
-          checkInCode,
-          input.specialRequests || null,
-        ]
-      );
-
-      const newBooking = bookingInsert.rows[0];
-
-      // 4. Insert booking item for workspace slot
-      await client.query(
-        `INSERT INTO booking_items (booking_id, description, unit_price, quantity, subtotal)
-         VALUES ($1, $2, $3, $4, $5)`,
-        [
-          newBooking.id,
-          `${wsCheck.rows[0].name} (${pricing.hours} hours)`,
-          pricing.hourlyRate,
-          pricing.hours,
-          pricing.workspaceSubtotal,
-        ]
-      );
-
-      // 5. Insert itemized add-ons
-      for (const addon of pricing.addOnsList) {
-        await client.query(
-          `INSERT INTO booking_add_ons (booking_id, add_on_id, quantity, unit_price, subtotal)
-           VALUES ($1, $2, $3, $4, $5)`,
-          [newBooking.id, addon.id, addon.quantity, addon.unitPrice, addon.subtotal]
-        );
+      if (err.code === '22023') {
+        throw new AppError(err.message || 'Invalid booking parameters.', 400, ERROR_CODES.VALIDATION_ERROR);
       }
-
-      // 6. Record audit status history
-      await client.query(
-        `INSERT INTO booking_status_history (booking_id, from_status, to_status, changed_by_type, changed_by_id, reason)
-         VALUES ($1, NULL, 'pending', 'client', $2, 'Booking initialized by client.')`,
-        [newBooking.id, clientId]
-      );
-
-      return newBooking;
-    });
+      throw err;
+    }
   }
 
   async cancelBooking(id: string, clientId: string, reason?: string): Promise<any> {
-    const check = await query('SELECT status FROM bookings WHERE id = $1 AND client_id = $2', [id, clientId]);
-    if (!check[0]) return null;
+    try {
+      const rows = await query(
+        `SELECT * FROM fn_cancel_booking_atomic($1::uuid, $2::uuid, $3::text)`,
+        [id, clientId, reason || 'Cancelled by member.']
+      );
 
-    if (check[0].status === 'cancelled' || check[0].status === 'completed') {
-      throw new Error(`Cannot cancel a booking that is already ${check[0].status}.`);
+      if (!rows || rows.length === 0) {
+        return null;
+      }
+
+      return this.findByIdAndClient(id, clientId);
+    } catch (err: any) {
+      if (err.code === '22023') {
+        throw new AppError(err.message || 'Cannot cancel this booking.', 400, ERROR_CODES.VALIDATION_ERROR);
+      }
+      throw err;
     }
-
-    await query(
-      `UPDATE bookings 
-       SET status = 'cancelled', 
-           cancelled_reason = $1, 
-           cancelled_at = CURRENT_TIMESTAMP, 
-           updated_at = CURRENT_TIMESTAMP 
-       WHERE id = $2 AND client_id = $3`,
-      [reason || 'Cancelled by member.', id, clientId]
-    );
-
-    await query(
-      `INSERT INTO booking_status_history (booking_id, from_status, to_status, changed_by_type, changed_by_id, reason)
-       VALUES ($1, $2, 'cancelled', 'client', $3, $4)`,
-      [id, check[0].status, clientId, reason || 'Cancelled by member.']
-    );
-
-    return this.findByIdAndClient(id, clientId);
   }
 }
 
