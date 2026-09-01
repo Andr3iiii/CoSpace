@@ -1,4 +1,6 @@
 import { adminWorkspaceRepository } from '../repositories/workspace.repository';
+import { AppError } from '../utils/errors';
+import { ERROR_CODES } from '../constants';
 import { PaginationParams } from '../types';
 
 export class AdminWorkspaceService {
@@ -9,7 +11,7 @@ export class AdminWorkspaceService {
   async getWorkspaceById(id: string) {
     const workspace = await adminWorkspaceRepository.findById(id);
     if (!workspace) {
-      throw new Error('Workspace not found.');
+      throw new AppError('Workspace not found.', 404, ERROR_CODES.NOT_FOUND);
     }
     return workspace;
   }

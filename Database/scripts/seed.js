@@ -2,7 +2,18 @@ const fs = require('fs');
 const path = require('path');
 const { Pool } = require('pg');
 
-require('dotenv').config({ path: path.join(__dirname, '../../Admin/Backend/.env') });
+const envCandidates = [
+  path.resolve(__dirname, '../../.env'),
+  path.resolve(process.cwd(), '.env'),
+  path.resolve(__dirname, '../../Admin/Backend/.env'),
+];
+
+for (const envPath of envCandidates) {
+  if (fs.existsSync(envPath)) {
+    require('dotenv').config({ path: envPath });
+    break;
+  }
+}
 
 const connectionString = process.env.DATABASE_URL || 'postgres://postgres:postgres@localhost:5432/cospace_db';
 const pool = new Pool({ connectionString });

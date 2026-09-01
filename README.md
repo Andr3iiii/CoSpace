@@ -57,7 +57,7 @@ CoSpace/
 │   ├── architecture.md    # Domain separation, layers & request flow
 │   ├── database.md        # 3NF Schema specifications & ERD
 │   ├── api.md             # Complete Admin and Client API endpoints
-│   └── deployment.md      # Vercel, Render & Managed Postgres guide
+│   └── deployment.md      # Cloud Deployment & Managed Postgres guide
 │
 ├── .gitignore
 ├── README.md
@@ -131,16 +131,12 @@ npm install --prefix Client/Backend
 ```
 
 ### 3. Environment Variables
-Copy `.env.example` to `.env` in all four projects:
+Copy `.env.example` to `.env` at the root of the project:
 ```bash
-# Admin
-cp Admin/Frontend/.env.example Admin/Frontend/.env
-cp Admin/Backend/.env.example Admin/Backend/.env
-
-# Client
-cp Client/Frontend/.env.example Client/Frontend/.env
-cp Client/Backend/.env.example Client/Backend/.env
+cp .env.example .env
 ```
+All four applications (Admin Frontend, Admin Backend, Client Frontend, Client Backend) and database scripts will automatically load this single global `.env` file.
+
 
 ### 4. Database Setup
 Ensure PostgreSQL is running, then run migrations and seeds:

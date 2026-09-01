@@ -1,4 +1,6 @@
 import { adminClientRepository } from '../repositories/client.repository';
+import { AppError } from '../utils/errors';
+import { ERROR_CODES } from '../constants';
 import { PaginationParams } from '../types';
 
 export class AdminClientService {
@@ -9,7 +11,7 @@ export class AdminClientService {
   async getClientById(id: string) {
     const client = await adminClientRepository.findById(id);
     if (!client) {
-      throw new Error('Client record not found.');
+      throw new AppError('Client record not found.', 404, ERROR_CODES.NOT_FOUND);
     }
     return client;
   }
@@ -17,7 +19,7 @@ export class AdminClientService {
   async updateClientStatus(id: string, status: 'active' | 'suspended' | 'inactive') {
     const updated = await adminClientRepository.updateStatus(id, status);
     if (!updated) {
-      throw new Error('Failed to update client status.');
+      throw new AppError('Client record not found or update failed.', 404, ERROR_CODES.NOT_FOUND);
     }
     return updated;
   }

@@ -59,6 +59,8 @@ export function validateClientLogin(data: any): { isValid: boolean; errors?: Rec
 
   if (!email) {
     errors.email = 'Email address is required.';
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    errors.email = 'Please provide a valid email address.';
   }
 
   if (!password) {

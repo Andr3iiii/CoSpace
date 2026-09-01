@@ -116,7 +116,7 @@ export class ClientWorkspaceRepository {
     const overlapping = await query(
       `SELECT id FROM bookings 
        WHERE workspace_id = $1 
-         AND status IN ('confirmed', 'active')
+         AND status IN ('pending', 'confirmed', 'active')
          AND (
            (start_time < $3 AND end_time > $2)
          )

@@ -1,4 +1,6 @@
 import { adminBookingRepository } from '../repositories/booking.repository';
+import { AppError } from '../utils/errors';
+import { ERROR_CODES } from '../constants';
 import { PaginationParams } from '../types';
 
 export class AdminBookingService {
@@ -9,7 +11,7 @@ export class AdminBookingService {
   async getBookingById(id: string) {
     const booking = await adminBookingRepository.findById(id);
     if (!booking) {
-      throw new Error('Booking record not found.');
+      throw new AppError('Booking record not found.', 404, ERROR_CODES.NOT_FOUND);
     }
     return booking;
   }
@@ -17,7 +19,7 @@ export class AdminBookingService {
   async updateBookingStatus(id: string, status: string, adminId: string, reason?: string) {
     const updated = await adminBookingRepository.updateStatus(id, status, adminId, reason);
     if (!updated) {
-      throw new Error('Failed to update booking status.');
+      throw new AppError('Booking record not found or update failed.', 404, ERROR_CODES.NOT_FOUND);
     }
     return updated;
   }

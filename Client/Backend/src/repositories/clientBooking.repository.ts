@@ -2,6 +2,8 @@ import { PoolClient } from 'pg';
 import { query } from '../database/connection';
 import { withTransaction } from '../database/transactions';
 import { generateBookingReference, generateCheckInCode } from '../utils/reference';
+import { AppError } from '../utils/errors';
+import { ERROR_CODES } from '../constants';
 import { CreateBookingInput } from '../types';
 
 export class ClientBookingRepository {
@@ -100,23 +102,25 @@ export class ClientBookingRepository {
       );
 
       if (wsCheck.rows.length === 0 || wsCheck.rows[0].status !== 'available') {
-        throw new Error('This workspace is currently unavailable for booking.');
+        throw new AppError('This workspace is currently unavailable for booking.', 404, ERROR_CODES.NOT_FOUND);
       }
 
-      // 2. Strict overlap collision check inside transaction
+      // 2. Strict overlap collision check inside transaction including all active/pending holds
       const overlapCheck = await client.query(
         `SELECT id FROM bookings
          WHERE workspace_id = $1
-           AND status IN ('confirmed', 'active')
+           AND status IN ('pending', 'confirmed', 'active')
            AND (start_time < $3 AND end_time > $2)
          FOR UPDATE`,
         [input.workspaceId, input.startTime, input.endTime]
       );
 
       if (overlapCheck.rows.length > 0) {
-        const error: any = new Error('The selected time slot was just booked by another member.');
-        error.code = 'BOOKING_CONFLICT';
-        throw error;
+        throw new AppError(
+          'The selected time slot was just booked by another member.',
+          409,
+          ERROR_CODES.BOOKING_CONFLICT
+        );
       }
 
       const bookingReference = generateBookingReference();

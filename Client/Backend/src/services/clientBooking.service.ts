@@ -1,6 +1,8 @@
 import { clientBookingRepository } from '../repositories/clientBooking.repository';
 import { clientWorkspaceRepository } from '../repositories/clientWorkspace.repository';
 import { query } from '../database/connection';
+import { AppError } from '../utils/errors';
+import { ERROR_CODES } from '../constants';
 import { CreateBookingInput } from '../types';
 
 export class ClientBookingService {
@@ -11,7 +13,7 @@ export class ClientBookingService {
   async getBookingDetail(id: string, clientId: string) {
     const booking = await clientBookingRepository.findByIdAndClient(id, clientId);
     if (!booking) {
-      throw new Error('Booking not found or access denied.');
+      throw new AppError('Booking not found or access denied.', 404, ERROR_CODES.NOT_FOUND);
     }
     return booking;
   }
@@ -19,11 +21,19 @@ export class ClientBookingService {
   async createBooking(clientId: string, input: CreateBookingInput) {
     const workspace = await clientWorkspaceRepository.findById(input.workspaceId);
     if (!workspace) {
-      throw new Error('Selected workspace does not exist.');
+      throw new AppError('Selected workspace does not exist.', 404, ERROR_CODES.NOT_FOUND);
     }
 
     const start = new Date(input.startTime);
     const end = new Date(input.endTime);
+
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      throw new AppError('Invalid booking start or end time.', 400, ERROR_CODES.VALIDATION_ERROR);
+    }
+
+    if (end <= start) {
+      throw new AppError('Booking end time must be after start time.', 400, ERROR_CODES.VALIDATION_ERROR);
+    }
 
     // Calculate hours (minimum 1 hour)
     const durationHours = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60)));
@@ -75,7 +85,7 @@ export class ClientBookingService {
   async cancelBooking(id: string, clientId: string, reason?: string) {
     const result = await clientBookingRepository.cancelBooking(id, clientId, reason);
     if (!result) {
-      throw new Error('Failed to cancel booking.');
+      throw new AppError('Failed to cancel booking.', 400, ERROR_CODES.VALIDATION_ERROR);
     }
     return result;
   }

@@ -9,10 +9,10 @@ This guide details the deployment architecture for CoSpace across managed cloud 
 - **Frontends (Vercel)**:
   - `Admin/Frontend` → Deployed to dedicated subdomain (e.g. `https://admin.cospace.com`)
   - `Client/Frontend` → Deployed to root domain (e.g. `https://cospace.com`)
-- **Backends (Render / AWS ECS / Railway)**:
+- **Backends (AWS ECS / Railway / Cloud Web Services)**:
   - `Admin/Backend` → Deployed as independent web service (`https://admin-api.cospace.com`)
   - `Client/Backend` → Deployed as independent web service (`https://api.cospace.com`)
-- **Database (Managed PostgreSQL - AWS RDS / Supabase / Neon / Render Postgres)**:
+- **Database (Managed PostgreSQL - AWS RDS / Supabase / Neon)**:
   - Shared PostgreSQL instance accessed securely via connection pooling.
 
 ---

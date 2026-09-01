@@ -2,6 +2,8 @@ import { clientAuthRepository } from '../repositories/clientAuth.repository';
 import { hashPassword, comparePassword } from '../utils/password';
 import { generateClientToken } from '../utils/jwt';
 import { resendClient } from '../integrations/resend';
+import { AppError } from '../utils/errors';
+import { ERROR_CODES } from '../constants';
 import { ClientUser } from '../types';
 
 export class ClientAuthService {
@@ -15,7 +17,11 @@ export class ClientAuthService {
   }): Promise<{ token: string; client: Omit<ClientUser, 'password_hash'> }> {
     const existing = await clientAuthRepository.findByEmail(data.email);
     if (existing) {
-      throw new Error('An account with this email address already exists.');
+      throw new AppError(
+        'An account with this email address already exists.',
+        409,
+        ERROR_CODES.CONFLICT
+      );
     }
 
     const password_hash = await hashPassword(data.password);
@@ -40,16 +46,28 @@ export class ClientAuthService {
   async login(email: string, password: string): Promise<{ token: string; client: Omit<ClientUser, 'password_hash'> }> {
     const client = await clientAuthRepository.findByEmail(email);
     if (!client || !client.password_hash) {
-      throw new Error('Invalid email or password credentials.');
+      throw new AppError(
+        'Invalid email or password credentials.',
+        401,
+        ERROR_CODES.UNAUTHORIZED
+      );
     }
 
     if (client.status === 'suspended') {
-      throw new Error('Your account is currently suspended. Please contact community management.');
+      throw new AppError(
+        'Your account is currently suspended. Please contact community management.',
+        403,
+        ERROR_CODES.FORBIDDEN
+      );
     }
 
     const isMatch = await comparePassword(password, client.password_hash);
     if (!isMatch) {
-      throw new Error('Invalid email or password credentials.');
+      throw new AppError(
+        'Invalid email or password credentials.',
+        401,
+        ERROR_CODES.UNAUTHORIZED
+      );
     }
 
     const token = generateClientToken({
@@ -65,7 +83,7 @@ export class ClientAuthService {
   async getMe(clientId: string): Promise<Omit<ClientUser, 'password_hash'>> {
     const client = await clientAuthRepository.findById(clientId);
     if (!client) {
-      throw new Error('Client profile not found.');
+      throw new AppError('Client profile not found.', 404, ERROR_CODES.NOT_FOUND);
     }
     const { password_hash: _, ...safeClient } = client;
     return safeClient;
