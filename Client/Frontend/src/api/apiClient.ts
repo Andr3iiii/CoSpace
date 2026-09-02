@@ -1,12 +1,21 @@
 function getBaseUrl(): string {
-  const envUrl = import.meta.env.VITE_CLIENT_API_URL;
+  const envUrl = import.meta.env.VITE_CLIENT_API_URL?.trim();
+
+  if (envUrl) {
+    return envUrl.replace(/\/$/, '');
+  }
+
   if (typeof window !== 'undefined') {
-    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    if (!isLocalhost || !envUrl) {
-      return '/api/client';
+    const isLocalhost =
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1';
+
+    if (isLocalhost) {
+      return 'http://localhost:3001';
     }
   }
-  return envUrl || 'http://localhost:3001/api/client';
+
+  return '';
 }
 
 const BASE_URL = getBaseUrl();
@@ -29,7 +38,12 @@ export class ApiClient {
   async request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
     const { params, headers, ...customConfig } = options;
 
-    let url = `${this.baseUrl}${endpoint}`;
+    // Ensure endpoint has the /api/client prefix and normalize slashes
+    const normalizedEndpoint = endpoint.startsWith('/api/client')
+      ? endpoint
+      : `/api/client${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+
+    let url = `${this.baseUrl}${normalizedEndpoint}`;
     if (params) {
       const searchParams = new URLSearchParams();
       Object.entries(params).forEach(([key, val]) => {

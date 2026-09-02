@@ -14,10 +14,12 @@ app.use(helmet());
 app.use(
   cors({
     origin: (origin, callback) => {
-      // In development or when origin matches CLIENT_URL, allowedOrigins, or Cloudflare tunnels/pages
+      // In development or when origin matches CLIENT_URL, allowedOrigins, Render frontend, or Cloudflare tunnels/pages
       if (
         !origin ||
         origin === config.clientUrl ||
+        origin === 'https://cospace-fe-client.onrender.com' ||
+        origin.endsWith('.onrender.com') ||
         config.nodeEnv === 'development' ||
         config.allowedOrigins.includes(origin) ||
         origin.endsWith('.trycloudflare.com') ||
