@@ -19,8 +19,49 @@ import {
   Armchair,
 } from 'lucide-react';
 
+const ROTATING_HERO_TITLES = [
+  'Premium Spaces',
+  'Flexible Hot Desks',
+  'Private Focus Suites',
+  '4K Meeting Rooms',
+  'Creative Studios',
+  'Modern Team Hubs',
+];
+
 export const HomePage: React.FC = () => {
   const [featuredSpaces, setFeaturedSpaces] = useState<Workspace[]>([]);
+  const [wordIndex, setWordIndex] = useState(0);
+  const [displayText, setDisplayText] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Typewriter effect loop with zero layout shift
+  useEffect(() => {
+    const currentWord = ROTATING_HERO_TITLES[wordIndex];
+    let timeout: NodeJS.Timeout;
+
+    if (!isDeleting && displayText === currentWord) {
+      // Pause at full word
+      timeout = setTimeout(() => {
+        setIsDeleting(true);
+      }, 2200);
+    } else if (isDeleting && displayText === '') {
+      // Move to next word after deleting
+      setIsDeleting(false);
+      setWordIndex((prev) => (prev + 1) % ROTATING_HERO_TITLES.length);
+      timeout = setTimeout(() => {}, 300);
+    } else {
+      const speed = isDeleting ? 35 : 75;
+      timeout = setTimeout(() => {
+        setDisplayText((prev) =>
+          isDeleting
+            ? currentWord.substring(0, prev.length - 1)
+            : currentWord.substring(0, prev.length + 1)
+        );
+      }, speed);
+    }
+
+    return () => clearTimeout(timeout);
+  }, [displayText, isDeleting, wordIndex]);
 
   useEffect(() => {
     async function loadFeatured() {
@@ -123,10 +164,11 @@ export const HomePage: React.FC = () => {
             <span>The Future of Coworking in BGC</span>
           </div>
 
-          <h1 className="text-4xl sm:text-6xl font-black text-foreground tracking-tight leading-tight">
-            Work, Collaborate & Create in{' '}
-            <span className="bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent">
-              Premium Spaces
+          <h1 className="text-4xl sm:text-6xl font-black text-foreground tracking-tight leading-[1.15] flex flex-col items-center justify-center">
+            <span className="block">Work, Collaborate & Create in</span>
+            <span className="inline-flex items-center justify-center min-h-[1.25em] mt-1 sm:mt-2 bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent select-none">
+              <span>{displayText}</span>
+              <span className="inline-block w-[3px] sm:w-[4px] h-[0.8em] ml-1 bg-gradient-to-b from-blue-400 to-purple-400 rounded-full animate-pulse align-middle" />
             </span>
           </h1>
 
@@ -204,7 +246,7 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* 3. Featured Workspaces Section */}
-      <section className="py-16 px-6 bg-card/40 border-y border-border/80">
+      <section className="py-16 px-6 bg-card/40 border-t border-b-0 border-border/60">
         <div className="max-w-7xl mx-auto space-y-8">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div>

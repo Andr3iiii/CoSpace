@@ -46,9 +46,11 @@ export class ClientBookingService {
 
     if (input.addOns && input.addOns.length > 0) {
       for (const item of input.addOns) {
+        const addonId = (item as any).addOnId || (item as any).add_on_id || (item as any).id;
+        if (!addonId) continue;
         const addonRow = await query<{ id: string; name: string; price: string }>(
           'SELECT id, name, price FROM add_ons WHERE id = $1 AND is_active = TRUE',
-          [item.addOnId]
+          [addonId]
         );
         if (addonRow[0]) {
           const unitPrice = parseFloat(addonRow[0].price);

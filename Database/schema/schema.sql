@@ -492,6 +492,9 @@ DECLARE
     v_conflict_id UUID;
     v_booking_id UUID;
     v_addon RECORD;
+    v_authoritative_price NUMERIC;
+    v_final_unit_price NUMERIC;
+    v_final_subtotal NUMERIC;
 BEGIN
     IF p_end_time <= p_start_time THEN
         RAISE EXCEPTION 'End time must be after start time' USING ERRCODE = '22023';
@@ -566,28 +569,47 @@ BEGIN
     );
 
     IF p_add_ons IS NOT NULL AND jsonb_array_length(p_add_ons) > 0 THEN
-        FOR v_addon IN SELECT * FROM jsonb_to_recordset(p_add_ons) AS x(
-            id UUID,
-            name VARCHAR,
-            unitPrice NUMERIC,
-            quantity INT,
-            subtotal NUMERIC
-        )
+        FOR v_addon IN 
+            SELECT 
+                COALESCE((elem->>'add_on_id')::UUID, (elem->>'addOnId')::UUID, (elem->>'id')::UUID) AS add_on_id,
+                COALESCE((elem->>'quantity')::INT, 1) AS quantity,
+                (elem->>'unit_price')::NUMERIC AS explicit_unit_price,
+                (elem->>'unitPrice')::NUMERIC AS explicit_unit_price_camel,
+                (elem->>'subtotal')::NUMERIC AS explicit_subtotal
+            FROM jsonb_array_elements(p_add_ons) AS elem
         LOOP
-            INSERT INTO public.booking_add_ons (
-                booking_id,
-                add_on_id,
-                quantity,
-                unit_price,
-                subtotal
-            )
-            VALUES (
-                v_booking_id,
-                v_addon.id,
-                v_addon.quantity,
-                v_addon.unitPrice,
-                v_addon.subtotal
-            );
+            IF v_addon.add_on_id IS NOT NULL THEN
+                SELECT ao.price INTO v_authoritative_price
+                FROM public.add_ons ao
+                WHERE ao.id = v_addon.add_on_id AND ao.is_active = TRUE;
+
+                v_final_unit_price := COALESCE(
+                    v_authoritative_price,
+                    v_addon.explicit_unit_price,
+                    v_addon.explicit_unit_price_camel,
+                    0.00
+                );
+
+                v_final_subtotal := COALESCE(
+                    v_addon.explicit_subtotal,
+                    ROUND(v_final_unit_price * GREATEST(1, v_addon.quantity), 2)
+                );
+
+                INSERT INTO public.booking_add_ons (
+                    booking_id,
+                    add_on_id,
+                    quantity,
+                    unit_price,
+                    subtotal
+                )
+                VALUES (
+                    v_booking_id,
+                    v_addon.add_on_id,
+                    GREATEST(1, v_addon.quantity),
+                    v_final_unit_price,
+                    v_final_subtotal
+                );
+            END IF;
         END LOOP;
     END IF;
 

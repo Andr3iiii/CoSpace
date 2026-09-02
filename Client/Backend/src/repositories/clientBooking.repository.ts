@@ -29,7 +29,13 @@ export class ClientBookingRepository {
       FROM bookings b
       JOIN workspaces w ON b.workspace_id = w.id
       JOIN workspace_types wt ON w.workspace_type_id = wt.id
-      LEFT JOIN payments p ON b.id = p.booking_id
+      LEFT JOIN LATERAL (
+        SELECT status, payment_method_type
+        FROM payments
+        WHERE booking_id = b.id
+        ORDER BY created_at DESC
+        LIMIT 1
+      ) p ON TRUE
       WHERE b.client_id = $1
       ORDER BY b.start_time DESC
     `;
@@ -94,7 +100,17 @@ export class ClientBookingRepository {
   ): Promise<any> {
     const bookingReference = generateBookingReference();
     const checkInCode = generateCheckInCode();
-    const addOnsJson = JSON.stringify(pricing.addOnsList || []);
+    const normalizedAddOns = (pricing.addOnsList || []).map((addon) => ({
+      id: addon.id,
+      add_on_id: addon.id,
+      addOnId: addon.id,
+      name: addon.name,
+      unitPrice: addon.unitPrice,
+      unit_price: addon.unitPrice,
+      quantity: addon.quantity,
+      subtotal: addon.subtotal,
+    }));
+    const addOnsJson = JSON.stringify(normalizedAddOns);
 
     try {
       const rows = await query(

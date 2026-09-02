@@ -1,3 +1,8 @@
+---
+trigger: always_on
+description: CoSpace UI/UX Evaluator Specialist Prompt and testing criteria
+---
+
 # UI/UX EVALUATOR AGENT — CoSpace
 
 ## ROLE

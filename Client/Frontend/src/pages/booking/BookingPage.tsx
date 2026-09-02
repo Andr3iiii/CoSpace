@@ -7,8 +7,10 @@ import { Workspace } from '../../types';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
-import { ArrowLeft, Check, AlertCircle } from 'lucide-react';
-import { addHours, format } from 'date-fns';
+import { DatePickerDropdown } from '../../components/ui/DatePickerDropdown';
+import { TimePickerDropdown } from '../../components/ui/TimePickerDropdown';
+import { ArrowLeft, Check, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { addHours, format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
 
 export const BookingPage: React.FC = () => {
@@ -17,6 +19,51 @@ export const BookingPage: React.FC = () => {
   const navigate = useNavigate();
 
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
+
+  // Helper to parse dates in yyyy-MM-dd or dd.MM.yyyy formats safely
+  const parseBookingDateTime = (dateStr: string, hourStr: string): Date | null => {
+    if (!dateStr || !hourStr) return null;
+    try {
+      let year = 2026, month = 0, day = 1;
+      if (dateStr.includes('-')) {
+        const parts = dateStr.split('-').map(Number);
+        if (parts.length === 3 && !isNaN(parts[0]) && !isNaN(parts[1]) && !isNaN(parts[2])) {
+          year = parts[0];
+          month = parts[1] - 1;
+          day = parts[2];
+        } else {
+          return null;
+        }
+      } else if (dateStr.includes('.')) {
+        const parts = dateStr.split('.').map(Number);
+        if (parts.length === 3 && !isNaN(parts[0]) && !isNaN(parts[1]) && !isNaN(parts[2])) {
+          day = parts[0];
+          month = parts[1] - 1;
+          year = parts[2];
+        } else {
+          return null;
+        }
+      } else {
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return null;
+        year = d.getFullYear();
+        month = d.getMonth();
+        day = d.getDate();
+      }
+
+      let hour = 9, min = 0;
+      if (hourStr.includes(':')) {
+        const [h, m] = hourStr.split(':').map(Number);
+        hour = isNaN(h) ? 9 : h;
+        min = isNaN(m) ? 0 : m;
+      }
+
+      const parsed = new Date(year, month, day, hour, min, 0, 0);
+      return isNaN(parsed.getTime()) ? null : parsed;
+    } catch {
+      return null;
+    }
+  };
 
   // Compute initial upcoming date and hour
   const getInitialBookingSlot = () => {
@@ -45,6 +92,8 @@ export const BookingPage: React.FC = () => {
   const [specialRequests, setSpecialRequests] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isSlotAvailable, setIsSlotAvailable] = useState<boolean | null>(null);
+  const [slotUnavailabilityReason, setSlotUnavailabilityReason] = useState<'past' | 'booked' | null>(null);
 
   useEffect(() => {
     async function loadWorkspace() {
@@ -58,6 +107,48 @@ export const BookingPage: React.FC = () => {
     }
     loadWorkspace();
   }, [workspaceId]);
+
+  // Real-time availability check when date, hour or duration changes
+  useEffect(() => {
+    async function verifySlotAvailability() {
+      if (!workspace || !selectedDate || !selectedHour) {
+        setIsSlotAvailable(null);
+        setSlotUnavailabilityReason(null);
+        return;
+      }
+
+      const start = parseBookingDateTime(selectedDate, selectedHour);
+      if (!start) {
+        setIsSlotAvailable(null);
+        setSlotUnavailabilityReason(null);
+        return;
+      }
+
+      const end = addHours(start, durationHours);
+
+      // Past date / time check
+      if (start.getTime() < Date.now() - 5 * 60 * 1000) {
+        setIsSlotAvailable(false);
+        setSlotUnavailabilityReason('past');
+        return;
+      }
+
+      try {
+        const res = await workspaceApi.checkAvailability(workspace.id, start.toISOString(), end.toISOString());
+        if (res && typeof res.isAvailable === 'boolean') {
+          setIsSlotAvailable(res.isAvailable);
+          setSlotUnavailabilityReason(res.isAvailable ? null : 'booked');
+        } else {
+          setIsSlotAvailable(null);
+          setSlotUnavailabilityReason(null);
+        }
+      } catch (err) {
+        setIsSlotAvailable(null);
+        setSlotUnavailabilityReason(null);
+      }
+    }
+    verifySlotAvailability();
+  }, [workspace, selectedDate, selectedHour, durationHours]);
 
   if (!client) {
     return (
@@ -106,9 +197,13 @@ export const BookingPage: React.FC = () => {
     setIsLoading(true);
     setErrorMessage(null);
 
-    const [year, month, day] = selectedDate.split('-').map(Number);
-    const [hourStr, minStr] = selectedHour.split(':');
-    const start = new Date(year, month - 1, day, parseInt(hourStr, 10), parseInt(minStr, 10), 0);
+    const start = parseBookingDateTime(selectedDate, selectedHour);
+    if (!start) {
+      setErrorMessage('Please select a valid reservation date and starting time.');
+      setIsLoading(false);
+      return;
+    }
+
     const end = addHours(start, durationHours);
 
     if (start.getTime() < Date.now() - 5 * 60 * 1000) {
@@ -126,14 +221,17 @@ export const BookingPage: React.FC = () => {
         specialRequests,
       });
 
-      // Redirect to payment step
-      navigate(`/payment/${booking.id}`);
+      if (booking && booking.id) {
+        navigate(`/payment/${booking.id}`);
+      } else {
+        throw new Error('Reservation could not be initialized.');
+      }
     } catch (err: any) {
       if (err.data?.errors) {
         const details = Object.values(err.data.errors).join(' ');
         setErrorMessage(details || err.message);
       } else {
-        setErrorMessage(err.message || 'Failed to complete reservation. Time slot may be unavailable.');
+        setErrorMessage(err.message || 'Failed to complete reservation. Time slot may be already reserved.');
       }
     } finally {
       setIsLoading(false);
@@ -154,7 +252,7 @@ export const BookingPage: React.FC = () => {
           Reserve {workspace?.name || 'Workspace'}
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Select your desired date, duration, and optional add-ons.
+          Pick your reservation date, starting time, duration, and optional amenities.
         </p>
       </div>
 
@@ -168,29 +266,68 @@ export const BookingPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Form: Date, Time & Add-ons */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Date & Time selector */}
-          <Card>
+          {/* 1. Date & Time Selection (High z-index to float over other cards) */}
+          <Card className="relative z-30 overflow-visible">
             <CardHeader className="pb-4">
-              <CardTitle className="text-base font-bold">1. Date & Time Duration</CardTitle>
+              <CardTitle className="text-base font-bold">1. Select Reservation Date & Time</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-5 overflow-visible">
+              {/* Date & Time Picker Controls */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Input
-                  label="Reservation Date"
-                  type="date"
-                  value={selectedDate}
-                  min={format(new Date(), 'yyyy-MM-dd')}
-                  onChange={(e) => setSelectedDate(e.target.value)}
-                />
+                {/* Date Dropdown */}
+                <div className="relative">
+                  <DatePickerDropdown
+                    label="Select a day"
+                    value={selectedDate}
+                    onChange={(newDate) => {
+                      setSelectedDate(newDate);
+                      setErrorMessage(null);
+                    }}
+                  />
+                </div>
 
-                <Input
-                  label="Start Time"
-                  type="time"
-                  value={selectedHour}
-                  onChange={(e) => setSelectedHour(e.target.value)}
-                />
+                {/* Starting Time Dropdown */}
+                <div className="relative">
+                  <TimePickerDropdown
+                    label="Start with"
+                    value={selectedHour}
+                    onChange={(newHour) => {
+                      setSelectedHour(newHour);
+                      setErrorMessage(null);
+                    }}
+                  />
+                </div>
               </div>
 
+              {/* Real-time slot availability badge */}
+              {isSlotAvailable !== null && (
+                <div
+                  className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                    isSlotAvailable
+                      ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                      : 'bg-destructive/10 text-destructive border border-destructive/20'
+                  }`}
+                >
+                  {isSlotAvailable ? (
+                    <>
+                      <CheckCircle2 className="h-3.5 w-3.5" />
+                      <span>Workspace slot is available</span>
+                    </>
+                  ) : slotUnavailabilityReason === 'past' ? (
+                    <>
+                      <AlertCircle className="h-3.5 w-3.5" />
+                      <span>Selected time is in the past</span>
+                    </>
+                  ) : (
+                    <>
+                      <AlertCircle className="h-3.5 w-3.5" />
+                      <span>Time slot is already reserved</span>
+                    </>
+                  )}
+                </div>
+              )}
+
+              {/* Duration Buttons */}
               <div className="pt-2">
                 <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
                   Duration: <span className="text-primary font-bold">{durationHours} Hours</span>
@@ -213,8 +350,8 @@ export const BookingPage: React.FC = () => {
             </CardContent>
           </Card>
 
-          {/* Add-ons selector */}
-          <Card>
+          {/* 2. Add-ons selector (Lower z-index) */}
+          <Card className="relative z-10">
             <CardHeader className="pb-4">
               <CardTitle className="text-base font-bold">2. Optional Add-ons & Equipment</CardTitle>
             </CardHeader>
@@ -255,8 +392,8 @@ export const BookingPage: React.FC = () => {
             </CardContent>
           </Card>
 
-          {/* Special Requests */}
-          <Card>
+          {/* 3. Special Requests */}
+          <Card className="relative z-0">
             <CardHeader className="pb-4">
               <CardTitle className="text-base font-bold">3. Special Instructions (Optional)</CardTitle>
             </CardHeader>
@@ -271,7 +408,7 @@ export const BookingPage: React.FC = () => {
         </div>
 
         {/* Right Summary Card */}
-        <div>
+        <div className="relative z-0">
           <Card className="sticky top-24 shadow-xl border-border/80">
             <CardHeader className="border-b border-border/80 pb-4">
               <CardTitle className="text-base font-bold">Reservation Summary</CardTitle>
@@ -284,7 +421,9 @@ export const BookingPage: React.FC = () => {
               </div>
               <div className="flex justify-between text-muted-foreground">
                 <span>Date:</span>
-                <span className="text-foreground font-medium">{selectedDate}</span>
+                <span className="text-foreground font-medium">
+                  {selectedDate ? format(parseISO(selectedDate), 'dd.MM.yyyy') : selectedDate}
+                </span>
               </div>
               <div className="flex justify-between text-muted-foreground">
                 <span>Time Slot:</span>
@@ -315,9 +454,10 @@ export const BookingPage: React.FC = () => {
                 size="lg"
                 className="w-full mt-4 font-bold shadow-lg shadow-primary/20"
                 isLoading={isLoading}
+                disabled={isSlotAvailable === false}
                 onClick={handleBookingSubmit}
               >
-                Proceed to Payment
+                {isSlotAvailable === false ? 'Time Slot Unavailable' : 'Proceed to Payment'}
               </Button>
             </CardContent>
           </Card>

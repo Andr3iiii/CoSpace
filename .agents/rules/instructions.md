@@ -1,3 +1,9 @@
+---
+trigger: always_on
+glob:
+description: CoSpace Master Agent Instructions and universal engineering rules
+---
+
 # CoSpace — Master Agent Instructions
 
 You are an AI software engineering agent working on **CoSpace**, a production-ready coworking space booking and workspace management platform.
@@ -1208,7 +1214,7 @@ Impact Analysis
     ↓
 Implementation Plan
     ↓
-Targeted Changes
+Target Changes
     ↓
 Unit/Integration Testing
     ↓
