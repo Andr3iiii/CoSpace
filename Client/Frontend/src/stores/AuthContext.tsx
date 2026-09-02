@@ -11,7 +11,13 @@ interface AuthContextType {
   logout: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+declare global {
+  var __COSPACE_AUTH_CONTEXT__: React.Context<AuthContextType | undefined> | undefined;
+}
+
+export const AuthContext: React.Context<AuthContextType | undefined> =
+  (typeof globalThis !== 'undefined' && (globalThis as any).__COSPACE_AUTH_CONTEXT__) ||
+  ((globalThis as any).__COSPACE_AUTH_CONTEXT__ = createContext<AuthContextType | undefined>(undefined));
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [client, setClient] = useState<ClientUser | null>(() => {
@@ -80,3 +86,5 @@ export function useAuth() {
   }
   return context;
 }
+
+export default AuthContext;

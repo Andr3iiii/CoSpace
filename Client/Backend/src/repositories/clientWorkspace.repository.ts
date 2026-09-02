@@ -119,6 +119,30 @@ export class ClientWorkspaceRepository {
     );
     return Boolean(rows[0]?.is_available);
   }
+
+  async getBookedSlots(workspaceId: string, date: string): Promise<Array<{ startTime: string; endTime: string; status: string }>> {
+    const rows = await query<{ start_time: Date; end_time: Date; status: string }>(
+      `SELECT start_time, end_time, status
+       FROM bookings
+       WHERE workspace_id = $1
+         AND (
+           status IN ('confirmed', 'active')
+           OR (status = 'pending' AND (hold_expires_at IS NULL OR hold_expires_at > CURRENT_TIMESTAMP))
+         )
+         AND (
+           DATE(start_time AT TIME ZONE 'Asia/Manila') = $2::date
+           OR DATE(start_time) = $2::date
+         )
+       ORDER BY start_time ASC`,
+      [workspaceId, date]
+    );
+
+    return rows.map((r) => ({
+      startTime: new Date(r.start_time).toISOString(),
+      endTime: new Date(r.end_time).toISOString(),
+      status: r.status,
+    }));
+  }
 }
 
 export const clientWorkspaceRepository = new ClientWorkspaceRepository();

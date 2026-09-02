@@ -21,7 +21,7 @@ export class ClientPaymentController {
   async confirmPayment(req: AuthenticatedClientRequest, res: Response, next: NextFunction): Promise<void> {
     try {
       const { paymentId } = req.body;
-      const result = await clientPaymentService.confirmPayment(paymentId);
+      const result = await clientPaymentService.confirmPayment(paymentId, req.clientUser!.id);
       sendSuccess(res, 'Payment confirmed successfully.', result);
     } catch (error) {
       next(error);

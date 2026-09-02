@@ -31,7 +31,7 @@ export class ClientPaymentRepository {
     return rows[0];
   }
 
-  async confirmPaymentSuccess(paymentId: string, providerPaymentId?: string): Promise<any> {
+  async confirmPaymentSuccess(paymentId: string, clientId?: string, providerPaymentId?: string): Promise<any> {
     return withTransaction(async (client) => {
       const pmt = await client.query(
         'SELECT * FROM payments WHERE id = $1 FOR UPDATE',
@@ -44,6 +44,32 @@ export class ClientPaymentRepository {
 
       const payment = pmt.rows[0];
 
+      // Security check: IDOR protection
+      if (clientId && payment.client_id !== clientId) {
+        throw new Error('Unauthorized payment access.');
+      }
+
+      // Fetch booking details
+      const bkgRes = await client.query(
+        `SELECT b.*, w.name AS workspace_name, w.floor, w.room_number, wt.name AS workspace_type,
+                c.email AS client_email, c.first_name, c.last_name
+         FROM bookings b
+         JOIN workspaces w ON b.workspace_id = w.id
+         JOIN workspace_types wt ON w.workspace_type_id = wt.id
+         JOIN clients c ON b.client_id = c.id
+         WHERE b.id = $1
+         FOR UPDATE`,
+        [payment.booking_id]
+      );
+
+      const booking = bkgRes.rows[0];
+      if (!booking) {
+        throw new Error('Associated booking not found.');
+      }
+
+      const newPaid = Math.round((parseFloat(booking.paid_amount || '0') + parseFloat(payment.amount)) * 100) / 100;
+      const remBalance = Math.max(0, Math.round((parseFloat(booking.final_amount) - newPaid) * 100) / 100);
+
       // Update payment
       await client.query(
         `UPDATE payments 
@@ -55,12 +81,16 @@ export class ClientPaymentRepository {
         [providerPaymentId || null, paymentId]
       );
 
-      // Confirm the corresponding booking
+      // Confirm the corresponding booking and clear hold
       await client.query(
         `UPDATE bookings 
-         SET status = 'confirmed', updated_at = CURRENT_TIMESTAMP 
+         SET status = 'confirmed', 
+             hold_expires_at = NULL,
+             paid_amount = $2,
+             remaining_balance = $3,
+             updated_at = CURRENT_TIMESTAMP 
          WHERE id = $1`,
-        [payment.booking_id]
+        [payment.booking_id, newPaid, remBalance]
       );
 
       // Add status history
@@ -77,7 +107,18 @@ export class ClientPaymentRepository {
         [payment.client_id, `/bookings/${payment.booking_id}`]
       );
 
-      return { success: true, bookingId: payment.booking_id };
+      return {
+        success: true,
+        bookingId: payment.booking_id,
+        payment: { ...payment, status: 'completed' },
+        booking: {
+          ...booking,
+          status: 'confirmed',
+          hold_expires_at: null,
+          paid_amount: newPaid,
+          remaining_balance: remBalance,
+        },
+      };
     });
   }
 }

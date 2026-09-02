@@ -10,6 +10,7 @@ export const bookingApi = {
     endTime: string;
     addOns?: Array<{ addOnId: string; quantity: number }>;
     specialRequests?: string;
+    paymentPlan?: 'full' | 'deposit_50';
   }) => apiClient.post<Booking>('/bookings', data),
   cancelBooking: (id: string, reason?: string) =>
     apiClient.post<Booking>(`/bookings/${id}/cancel`, { reason }),

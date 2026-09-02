@@ -27,7 +27,15 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-:root {
+/* 1. Global Smooth Scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* 2. Dark Mode Palette (Default - Sleek Deep Midnight) */
+:root,
+.dark,
+[data-theme="dark"] {
   --background: #090d16;
   --foreground: #f8fafc;
   --card: #0f172a;
@@ -50,6 +58,31 @@
   --radius: 0.625rem;
 }
 
+/* 3. Soft Executive Light Mode (Warm, Eye-Friendly, Non-Glaring Neutral Slate) */
+.light,
+[data-theme="light"] {
+  --background: #f1f5f9; /* Soothing neutral slate background to eliminate blinding glare */
+  --foreground: #0f172a; /* Deep charcoal slate for sharp, comfortable readability */
+  --card: #ffffff;       /* Pure clean cards elevated gracefully over soft slate base */
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  --primary: #2563eb;    /* Vibrant sapphire blue */
+  --primary-foreground: #ffffff;
+  --secondary: #e2e8f0;  /* Subtle muted slate surface */
+  --secondary-foreground: #1e293b;
+  --muted: #e2e8f0;
+  --muted-foreground: #64748b; /* Balanced mid-tone text */
+  --accent: #3b82f6;
+  --accent-foreground: #ffffff;
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  --border: #e2e8f0;     /* Soft unobtrusive divider lines */
+  --input: #cbd5e1;
+  --ring: #2563eb;
+  --radius: 0.625rem;
+}
+
 * {
   border-color: var(--border);
   box-sizing: border-box;
@@ -63,20 +96,36 @@ body {
   margin: 0;
   padding: 0;
   min-height: 100vh;
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
-/* Custom modern scrollbar */
+/* 4. Subtle Background Grid & Mesh Patterns */
+.bg-grid-pattern {
+  background-size: 36px 36px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+}
+
+.light .bg-grid-pattern,
+[data-theme="light"] .bg-grid-pattern {
+  background-image: 
+    linear-gradient(to right, rgba(15, 23, 42, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15, 23, 42, 0.035) 1px, transparent 1px);
+}
+
+/* 5. Custom modern scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #090d16;
+  background: var(--background);
 }
 ::-webkit-scrollbar-thumb {
-  background: #1e293b;
+  background: var(--border);
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #334155;
+  background: var(--muted-foreground);
 }

@@ -4,14 +4,13 @@ import { useAuth } from '../../stores/AuthContext';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
-import { theme } from '../../theme/theme';
-import { Save, Check, User, Bell, MapPin } from 'lucide-react';
+import { Save, Check, User, Bell } from 'lucide-react';
 
 export const ProfilePage: React.FC = () => {
   const { client } = useAuth();
-  const [profileData, setProfileData] = useState<any>(null);
+  const [, setProfileData] = useState<any>(null);
   const [saved, setSaved] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [, setIsLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
@@ -36,62 +35,86 @@ export const ProfilePage: React.FC = () => {
   };
 
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '32px 24px', width: '100%' }}>
-      <div style={{ marginBottom: '28px' }}>
-        <h1 style={{ fontSize: '28px', fontWeight: 800, color: '#fff', marginBottom: '6px' }}>
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 w-full space-y-6">
+      <div>
+        <h1 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
           Member Profile & Settings
         </h1>
-        <p style={{ fontSize: '14px', color: theme.colors.textMuted }}>
+        <p className="text-sm text-muted-foreground mt-1">
           Update your contact details, billing information, and alert preferences
         </p>
       </div>
 
-      <form onSubmit={handleSave}>
-        <Card style={{ marginBottom: '24px' }}>
-          <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#fff', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <User size={18} color={theme.colors.primary} /> Personal & Company Information
+      <form onSubmit={handleSave} className="space-y-6">
+        <Card className="space-y-4">
+          <h3 className="text-base font-bold text-foreground flex items-center gap-2">
+            <User className="h-5 w-5 text-primary" /> Personal & Company Information
           </h3>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input label="First Name" defaultValue={client?.first_name || ''} />
             <Input label="Last Name" defaultValue={client?.last_name || ''} />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            <Input label="Email Address" defaultValue={client?.email || ''} disabled helperText="Email is managed via identity provider" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input
+              label="Email Address"
+              defaultValue={client?.email || ''}
+              disabled
+              helperText="Email is managed via your registered identity"
+            />
             <Input label="Contact Phone" defaultValue={client?.phone || '+63 917 123 4567'} />
           </div>
 
           <Input label="Company / Organization" defaultValue={client?.company_name || 'Acme Innovations'} />
         </Card>
 
-        <Card style={{ marginBottom: '24px' }}>
-          <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#fff', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Bell size={18} color={theme.colors.primary} /> Notification Preferences
+        <Card className="space-y-4">
+          <h3 className="text-base font-bold text-foreground flex items-center gap-2">
+            <Bell className="h-5 w-5 text-primary" /> Notification Preferences
           </h3>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '14px', color: theme.colors.text }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
-              <input type="checkbox" defaultChecked style={{ accentColor: theme.colors.primary, width: '16px', height: '16px' }} />
-              <span>Email notifications for booking confirmations and receipts</span>
+          <div className="flex flex-col gap-3 text-sm text-foreground">
+            <label className="flex items-center gap-2.5 cursor-pointer">
+              <input
+                type="checkbox"
+                defaultChecked
+                className="w-4 h-4 rounded border-border text-primary focus:ring-primary accent-primary"
+              />
+              <span className="text-muted-foreground hover:text-foreground transition-colors">
+                Email notifications for booking confirmations and receipts
+              </span>
             </label>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
-              <input type="checkbox" defaultChecked style={{ accentColor: theme.colors.primary, width: '16px', height: '16px' }} />
-              <span>SMS check-in reminders (sent 2 hours before session)</span>
+            <label className="flex items-center gap-2.5 cursor-pointer">
+              <input
+                type="checkbox"
+                defaultChecked
+                className="w-4 h-4 rounded border-border text-primary focus:ring-primary accent-primary"
+              />
+              <span className="text-muted-foreground hover:text-foreground transition-colors">
+                SMS check-in reminders (sent 2 hours before session)
+              </span>
             </label>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
-              <input type="checkbox" defaultChecked style={{ accentColor: theme.colors.primary, width: '16px', height: '16px' }} />
-              <span>CoSpace Community newsletter & exclusive event invitations</span>
+            <label className="flex items-center gap-2.5 cursor-pointer">
+              <input
+                type="checkbox"
+                defaultChecked
+                className="w-4 h-4 rounded border-border text-primary focus:ring-primary accent-primary"
+              />
+              <span className="text-muted-foreground hover:text-foreground transition-colors">
+                CoSpace Community newsletter & exclusive event invitations
+              </span>
             </label>
           </div>
         </Card>
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <div className="flex justify-end">
           <Button
             type="submit"
             variant="primary"
             size="lg"
-            leftIcon={saved ? <Check size={18} /> : <Save size={18} />}
+            leftIcon={saved ? <Check className="h-4 w-4" /> : <Save className="h-4 w-4" />}
+            className="shadow-lg shadow-primary/20"
           >
             {saved ? 'Changes Saved!' : 'Save Profile'}
           </Button>

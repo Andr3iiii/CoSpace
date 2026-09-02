@@ -3,14 +3,12 @@ import { notificationApi } from '../../api/notification.api';
 import { NotificationItem } from '../../types';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
-import { Badge } from '../../components/ui/Badge';
-import { theme } from '../../theme/theme';
-import { Bell, CheckCircle2, Calendar, CreditCard, Info } from 'lucide-react';
+import { Bell, Calendar, CreditCard } from 'lucide-react';
 import { format } from 'date-fns';
 
 export const NotificationsPage: React.FC = () => {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [, setIsLoading] = useState(true);
 
   const fetchNotifs = async () => {
     setIsLoading(true);
@@ -53,69 +51,60 @@ export const NotificationsPage: React.FC = () => {
   };
 
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '32px 24px', width: '100%' }}>
-      <div style={{ marginBottom: '28px' }}>
-        <h1 style={{ fontSize: '28px', fontWeight: 800, color: '#fff', marginBottom: '6px' }}>
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 w-full space-y-6">
+      <div>
+        <h1 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
           Notifications & Alerts
         </h1>
-        <p style={{ fontSize: '14px', color: theme.colors.textMuted }}>
+        <p className="text-sm text-muted-foreground mt-1">
           Real-time updates regarding your reservations and payments
         </p>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div className="flex flex-col gap-3">
         {notifications.length === 0 ? (
-          <Card style={{ textAlign: 'center', padding: '48px 24px' }}>
-            <Bell size={40} color={theme.colors.textDim} style={{ margin: '0 auto 12px auto' }} />
-            <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#fff', marginBottom: '4px' }}>
-              No Notifications
-            </h3>
-            <p style={{ fontSize: '13px', color: theme.colors.textDim }}>
-              You are completely caught up!
-            </p>
+          <Card className="text-center py-12 px-6 space-y-3">
+            <Bell className="h-10 w-10 text-muted-foreground mx-auto opacity-50" />
+            <h3 className="text-base font-bold text-foreground">No Notifications</h3>
+            <p className="text-xs text-muted-foreground">You are completely caught up!</p>
           </Card>
         ) : (
           notifications.map((n) => (
             <Card
               key={n.id}
-              style={{
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: '16px',
-                backgroundColor: n.is_read ? theme.colors.surfaceCard : 'rgba(16, 185, 129, 0.08)',
-                border: `1px solid ${n.is_read ? theme.colors.border : theme.colors.primaryLight}`,
-              }}
+              className={`flex items-start gap-4 p-4 sm:p-5 transition-all ${
+                n.is_read
+                  ? 'bg-card/70 border-border/80'
+                  : 'bg-primary/5 border-primary/30 shadow-md'
+              }`}
             >
               <div
-                style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '50%',
-                  backgroundColor: n.type === 'payment' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(99, 102, 241, 0.15)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: n.type === 'payment' ? theme.colors.success : theme.colors.secondary,
-                  flexShrink: 0,
-                }}
+                className={`h-9 w-9 rounded-xl flex items-center justify-center shrink-0 ${
+                  n.type === 'payment'
+                    ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25'
+                    : 'bg-primary/15 text-primary border border-primary/25'
+                }`}
               >
-                {n.type === 'payment' ? <CreditCard size={18} /> : <Calendar size={18} />}
+                {n.type === 'payment' ? <CreditCard className="h-4 w-4" /> : <Calendar className="h-4 w-4" />}
               </div>
 
-              <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
-                  <h4 style={{ fontSize: '15px', fontWeight: 700, color: '#fff' }}>{n.title}</h4>
-                  <span style={{ fontSize: '11px', color: theme.colors.textDim }}>
+              <div className="flex-1 min-w-0">
+                <div className="flex justify-between items-start gap-2 mb-1">
+                  <h4 className="text-sm font-bold text-foreground leading-snug">{n.title}</h4>
+                  <span className="text-[11px] text-muted-foreground shrink-0">
                     {format(new Date(n.created_at), 'PP p')}
                   </span>
                 </div>
-                <p style={{ fontSize: '13px', color: theme.colors.textMuted, lineHeight: 1.5 }}>
-                  {n.message}
-                </p>
+                <p className="text-xs text-muted-foreground leading-relaxed">{n.message}</p>
               </div>
 
               {!n.is_read && (
-                <Button variant="ghost" size="sm" onClick={() => markAsRead(n.id)}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => markAsRead(n.id)}
+                  className="text-xs font-semibold shrink-0"
+                >
                   Mark Read
                 </Button>
               )}

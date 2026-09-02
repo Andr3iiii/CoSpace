@@ -7,7 +7,7 @@ export class GoogleMapsClientIntegration {
     this.apiKey = config.googleMaps.apiKey;
   }
 
-  getEmbedMapUrl(lat = 14.5547, lng = 121.0476): string {
+  getEmbedMapUrl(lat = 13.6218, lng = 123.1948): string {
     return `https://www.google.com/maps/embed/v1/place?key=${this.apiKey}&q=${lat},${lng}`;
   }
 }

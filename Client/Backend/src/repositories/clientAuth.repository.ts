@@ -27,8 +27,8 @@ export class ClientAuthRepository {
     company_name?: string;
   }): Promise<ClientUser> {
     const rows = await query<ClientUser>(
-      `INSERT INTO clients (email, password_hash, first_name, last_name, phone, company_name, status)
-       VALUES ($1, $2, $3, $4, $5, $6, 'active')
+      `INSERT INTO clients (email, password_hash, first_name, last_name, phone, company_name, status, email_verified_at)
+       VALUES ($1, $2, $3, $4, $5, $6, 'active', CURRENT_TIMESTAMP)
        RETURNING id, email, first_name, last_name, phone, company_name, status, avatar_url, created_at, updated_at`,
       [
         client.email.toLowerCase().trim(),

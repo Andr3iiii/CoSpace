@@ -110,7 +110,7 @@ export const Footer: React.FC = () => {
           </a>
           <span className="flex items-center gap-2">
             <MapPin className="h-3 w-3 text-primary" />
-            <span>Sta. Cruz, Naga City, Camarines Sur, Philippines</span>
+            <span>2nd Floor JH Bldg., Sta. Cruz, Naga City, Camarines Sur, Philippines</span>
           </span>
           <a href="tel:+63288881234" className="flex items-center gap-1.5 hover:text-white transition-colors">
             <Phone className="h-3 w-3 text-primary" />

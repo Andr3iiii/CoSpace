@@ -6,6 +6,7 @@ interface TimePickerDropdownProps {
   onChange: (timeStr: string) => void;
   label?: string;
   className?: string;
+  disabledSlots?: string[]; // List of 24h format times that are booked/unavailable, e.g. ['09:00', '10:00']
 }
 
 export const TimePickerDropdown: React.FC<TimePickerDropdownProps> = ({
@@ -13,12 +14,13 @@ export const TimePickerDropdown: React.FC<TimePickerDropdownProps> = ({
   onChange,
   label = 'Start with',
   className = '',
+  disabledSlots = [],
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Parse current hour and minute
-  const [hoursStr, minsStr] = (value || '09:00').split(':');
+  const [hoursStr] = (value || '09:00').split(':');
   const initialHour = parseInt(hoursStr, 10);
   const isPMInitial = initialHour >= 12;
   const [period, setPeriod] = useState<'AM' | 'PM'>(isPMInitial ? 'PM' : 'AM');
@@ -88,7 +90,7 @@ export const TimePickerDropdown: React.FC<TimePickerDropdownProps> = ({
       ref={containerRef}
       className={`relative inline-block w-full ${isOpen ? 'z-50' : 'z-20'} ${className}`}
     >
-      {/* Trigger Button Matching Reference UI */}
+      {/* Trigger Button */}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
@@ -117,7 +119,7 @@ export const TimePickerDropdown: React.FC<TimePickerDropdownProps> = ({
 
       {/* Time Picker Popup Menu */}
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 z-50 w-full sm:w-[220px] p-3 rounded-2xl bg-[#0F172A] border border-border shadow-2xl backdrop-blur-2xl ring-1 ring-white/10 animate-in fade-in-50 zoom-in-95">
+        <div className="absolute top-full left-0 mt-2 z-50 w-full sm:w-[240px] p-3 rounded-2xl bg-popover text-popover-foreground border border-border shadow-2xl backdrop-blur-2xl ring-1 ring-border/50 animate-in fade-in-50 zoom-in-95">
           {/* AM / PM Toggle Header */}
           <div className="flex items-center rounded-xl bg-muted/50 p-1 mb-2">
             <button
@@ -148,19 +150,30 @@ export const TimePickerDropdown: React.FC<TimePickerDropdownProps> = ({
           <div className="max-h-56 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
             {slots.map((slot) => {
               const isSelected = value === slot.value24;
+              const isBlocked = disabledSlots.includes(slot.value24);
+
               return (
                 <button
                   key={slot.value24}
                   type="button"
-                  onClick={() => handleSelectSlot(slot.value24)}
-                  className={`w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                    isSelected
-                      ? 'bg-primary text-white font-black shadow-sm'
-                      : 'text-foreground hover:bg-muted/60'
+                  disabled={isBlocked}
+                  onClick={() => !isBlocked && handleSelectSlot(slot.value24)}
+                  className={`w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                    isBlocked
+                      ? 'opacity-40 cursor-not-allowed bg-muted/30 text-muted-foreground'
+                      : isSelected
+                      ? 'bg-primary text-white font-black shadow-sm cursor-pointer'
+                      : 'text-foreground hover:bg-muted/60 cursor-pointer'
                   }`}
                 >
-                  <span>{slot.display}</span>
-                  <span className="text-[10px] opacity-70">{period}</span>
+                  <span className={isBlocked ? 'line-through' : ''}>{slot.display}</span>
+                  {isBlocked ? (
+                    <span className="text-[9px] uppercase px-1.5 py-0.5 rounded bg-destructive/15 text-destructive font-black">
+                      Reserved
+                    </span>
+                  ) : (
+                    <span className="text-[10px] opacity-70">{period}</span>
+                  )}
                 </button>
               );
             })}

@@ -127,7 +127,8 @@ export class ClientBookingRepository {
           $10::numeric,
           $11::numeric,
           $12::numeric,
-          $13::jsonb
+          $13::jsonb,
+          $14::varchar
         )`,
         [
           clientId,
@@ -143,6 +144,7 @@ export class ClientBookingRepository {
           pricing.totalAmount,
           pricing.finalAmount,
           addOnsJson,
+          input.paymentPlan || 'full',
         ]
       );
 

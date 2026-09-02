@@ -6,6 +6,7 @@ import { requestLogger } from './middleware/requestLogger';
 import { errorHandler } from './middleware/errorHandler';
 import healthRoutes from './routes/health.routes';
 import clientRoutes from './routes/index';
+import authRoutes from './routes/auth.routes';
 
 const app: Application = express();
 
@@ -38,6 +39,9 @@ app.use(requestLogger);
 
 // Health check endpoint (Strictly matching requirement)
 app.use('/', healthRoutes);
+
+// Direct /api/auth endpoints alias
+app.use('/api/auth', authRoutes);
 
 // Client domain REST routes
 app.use('/api/client', clientRoutes);

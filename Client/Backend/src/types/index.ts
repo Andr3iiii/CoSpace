@@ -45,6 +45,7 @@ export interface CreateBookingInput {
   endTime: string | Date;
   addOns?: Array<{ addOnId: string; quantity: number }>;
   specialRequests?: string;
+  paymentPlan?: 'full' | 'deposit_50';
 }
 
 export interface BookingResult {
@@ -61,5 +62,43 @@ export interface BookingResult {
   status: string;
   check_in_code: string;
   special_requests?: string;
+  hold_expires_at?: Date | null;
+  payment_plan: 'full' | 'deposit_50';
+  paid_amount: number;
+  remaining_balance: number;
   created_at: Date;
 }
+
+export interface EmailVerification {
+  id: string;
+  email: string;
+  otp_hash: string;
+  expires_at: Date;
+  attempts: number;
+  max_attempts: number;
+  is_verified: boolean;
+  verified_at?: Date | null;
+  last_sent_at: Date;
+  created_at: Date;
+}
+
+export interface EmailVerificationOtp {
+  id: string;
+  email: string;
+  otp_hash: string;
+  expires_at: Date;
+  attempts: number;
+  max_attempts: number;
+  is_verified: boolean;
+  verified_at?: Date | null;
+  is_invalidated: boolean;
+  invalidated_reason?: string | null;
+  verification_token?: string | null;
+  token_expires_at?: Date | null;
+  is_consumed: boolean;
+  consumed_at?: Date | null;
+  last_sent_at: Date;
+  created_at: Date;
+}
+
+

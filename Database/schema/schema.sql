@@ -201,6 +201,10 @@ CREATE TABLE bookings (
     special_requests TEXT,
     cancelled_reason TEXT,
     cancelled_at TIMESTAMPTZ,
+    hold_expires_at TIMESTAMPTZ,
+    payment_plan VARCHAR(20) NOT NULL DEFAULT 'full' CHECK (payment_plan IN ('full', 'deposit_50')),
+    paid_amount NUMERIC(10, 2) NOT NULL DEFAULT 0.00 CHECK (paid_amount >= 0),
+    remaining_balance NUMERIC(10, 2) NOT NULL DEFAULT 0.00 CHECK (remaining_balance >= 0),
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT check_booking_dates CHECK (end_time > start_time)
@@ -362,6 +366,28 @@ CREATE TABLE reviews (
 );
 
 -- ----------------------------------------------------------------------------
+-- 21. Email Verification OTPs Table
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.email_verification_otps (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email VARCHAR(255) NOT NULL,
+    otp_hash VARCHAR(255) NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL,
+    attempts INT NOT NULL DEFAULT 0,
+    max_attempts INT NOT NULL DEFAULT 5,
+    is_verified BOOLEAN NOT NULL DEFAULT FALSE,
+    verified_at TIMESTAMPTZ,
+    is_invalidated BOOLEAN NOT NULL DEFAULT FALSE,
+    invalidated_reason VARCHAR(100),
+    verification_token VARCHAR(255),
+    token_expires_at TIMESTAMPTZ,
+    is_consumed BOOLEAN NOT NULL DEFAULT FALSE,
+    consumed_at TIMESTAMPTZ,
+    last_sent_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ----------------------------------------------------------------------------
 -- Indexes for Performance & Concurrency Optimization
 -- ----------------------------------------------------------------------------
 CREATE INDEX idx_bookings_client_id ON bookings(client_id);
@@ -466,7 +492,8 @@ CREATE OR REPLACE FUNCTION fn_create_booking_atomic(
     p_workspace_subtotal NUMERIC,
     p_total_amount NUMERIC,
     p_final_amount NUMERIC,
-    p_add_ons JSONB DEFAULT '[]'::jsonb
+    p_add_ons JSONB DEFAULT '[]'::jsonb,
+    p_payment_plan VARCHAR(20) DEFAULT 'full'
 )
 RETURNS TABLE (
     id UUID,
@@ -481,12 +508,17 @@ RETURNS TABLE (
     status VARCHAR,
     check_in_code VARCHAR,
     special_requests TEXT,
+    hold_expires_at TIMESTAMPTZ,
+    payment_plan VARCHAR,
+    paid_amount NUMERIC,
+    remaining_balance NUMERIC,
     created_at TIMESTAMPTZ,
     updated_at TIMESTAMPTZ
 )
 LANGUAGE plpgsql
 VOLATILE
 AS $$
+#variable_conflict use_column
 DECLARE
     v_ws_record RECORD;
     v_conflict_id UUID;
@@ -495,11 +527,33 @@ DECLARE
     v_authoritative_price NUMERIC;
     v_final_unit_price NUMERIC;
     v_final_subtotal NUMERIC;
+    v_initial_paid NUMERIC;
+    v_initial_remaining NUMERIC;
 BEGIN
+    -- 1. Validate time bounds
     IF p_end_time <= p_start_time THEN
         RAISE EXCEPTION 'End time must be after start time' USING ERRCODE = '22023';
     END IF;
 
+    -- 2. Clean up any previous unconfirmed pending holds by THIS client on this workspace
+    -- (Allows members to click back and adjust their booking without being blocked by their own hold)
+    UPDATE public.bookings AS bkg
+    SET status = 'cancelled',
+        cancelled_reason = 'Superseded by member re-booking',
+        cancelled_at = CURRENT_TIMESTAMP,
+        updated_at = CURRENT_TIMESTAMP
+    WHERE bkg.workspace_id = p_workspace_id
+      AND bkg.client_id = p_client_id
+      AND bkg.status = 'pending';
+
+    -- Clean up any expired pending holds on this workspace
+    UPDATE public.bookings AS bkg
+    SET status = 'expired', updated_at = CURRENT_TIMESTAMP
+    WHERE bkg.workspace_id = p_workspace_id
+      AND bkg.status = 'pending'
+      AND bkg.hold_expires_at <= CURRENT_TIMESTAMP;
+
+    -- 3. Lock workspace row for update to serialize concurrent reservations
     SELECT ws.id, ws.name, ws.status INTO v_ws_record
     FROM public.workspaces ws
     WHERE ws.id = p_workspace_id
@@ -513,10 +567,14 @@ BEGIN
         RAISE EXCEPTION 'Workspace is currently unavailable for booking' USING ERRCODE = '22023';
     END IF;
 
+    -- 4. Check for any overlapping bookings with row-level locks
     SELECT b.id INTO v_conflict_id
     FROM public.bookings b
     WHERE b.workspace_id = p_workspace_id
-      AND b.status IN ('pending', 'confirmed', 'active')
+      AND (
+        b.status IN ('confirmed', 'active')
+        OR (b.status = 'pending' AND (b.hold_expires_at IS NULL OR b.hold_expires_at > CURRENT_TIMESTAMP))
+      )
       AND (b.start_time < p_end_time AND b.end_time > p_start_time)
     LIMIT 1
     FOR UPDATE;
@@ -525,6 +583,15 @@ BEGIN
         RAISE EXCEPTION 'The selected time slot was just booked by another member.' USING ERRCODE = '23P01';
     END IF;
 
+    -- Compute deposit amounts based on payment plan
+    v_initial_paid := 0.00;
+    IF p_payment_plan = 'deposit_50' THEN
+        v_initial_remaining := ROUND(p_final_amount * 0.50, 2);
+    ELSE
+        v_initial_remaining := 0.00;
+    END IF;
+
+    -- 5. Insert new booking with 10-minute hold
     INSERT INTO public.bookings (
         booking_reference,
         client_id,
@@ -536,7 +603,11 @@ BEGIN
         final_amount,
         status,
         check_in_code,
-        special_requests
+        special_requests,
+        hold_expires_at,
+        payment_plan,
+        paid_amount,
+        remaining_balance
     )
     VALUES (
         p_booking_reference,
@@ -549,10 +620,15 @@ BEGIN
         p_final_amount,
         'pending',
         p_check_in_code,
-        p_special_requests
+        p_special_requests,
+        CURRENT_TIMESTAMP + INTERVAL '10 minutes',
+        COALESCE(p_payment_plan, 'full'),
+        v_initial_paid,
+        v_initial_remaining
     )
     RETURNING bookings.id INTO v_booking_id;
 
+    -- 6. Insert primary workspace item
     INSERT INTO public.booking_items (
         booking_id,
         description,
@@ -568,32 +644,24 @@ BEGIN
         p_workspace_subtotal
     );
 
+    -- 7. Insert add-on line items from JSON array
     IF p_add_ons IS NOT NULL AND jsonb_array_length(p_add_ons) > 0 THEN
-        FOR v_addon IN 
-            SELECT 
-                COALESCE((elem->>'add_on_id')::UUID, (elem->>'addOnId')::UUID, (elem->>'id')::UUID) AS add_on_id,
-                COALESCE((elem->>'quantity')::INT, 1) AS quantity,
-                (elem->>'unit_price')::NUMERIC AS explicit_unit_price,
-                (elem->>'unitPrice')::NUMERIC AS explicit_unit_price_camel,
-                (elem->>'subtotal')::NUMERIC AS explicit_subtotal
-            FROM jsonb_array_elements(p_add_ons) AS elem
+        FOR v_addon IN SELECT * FROM jsonb_to_recordset(p_add_ons) AS x(
+            id UUID,
+            add_on_id UUID,
+            name VARCHAR,
+            unit_price NUMERIC,
+            quantity INT,
+            subtotal NUMERIC
+        )
         LOOP
-            IF v_addon.add_on_id IS NOT NULL THEN
-                SELECT ao.price INTO v_authoritative_price
-                FROM public.add_ons ao
-                WHERE ao.id = v_addon.add_on_id AND ao.is_active = TRUE;
+            SELECT a.price INTO v_authoritative_price
+            FROM public.add_ons a
+            WHERE a.id = COALESCE(v_addon.add_on_id, v_addon.id) AND a.is_active = TRUE;
 
-                v_final_unit_price := COALESCE(
-                    v_authoritative_price,
-                    v_addon.explicit_unit_price,
-                    v_addon.explicit_unit_price_camel,
-                    0.00
-                );
-
-                v_final_subtotal := COALESCE(
-                    v_addon.explicit_subtotal,
-                    ROUND(v_final_unit_price * GREATEST(1, v_addon.quantity), 2)
-                );
+            IF v_authoritative_price IS NOT NULL THEN
+                v_final_unit_price := v_authoritative_price;
+                v_final_subtotal := v_final_unit_price * COALESCE(v_addon.quantity, 1);
 
                 INSERT INTO public.booking_add_ons (
                     booking_id,
@@ -604,15 +672,31 @@ BEGIN
                 )
                 VALUES (
                     v_booking_id,
-                    v_addon.add_on_id,
-                    GREATEST(1, v_addon.quantity),
+                    COALESCE(v_addon.add_on_id, v_addon.id),
+                    COALESCE(v_addon.quantity, 1),
                     v_final_unit_price,
+                    v_final_subtotal
+                );
+
+                INSERT INTO public.booking_items (
+                    booking_id,
+                    description,
+                    unit_price,
+                    quantity,
+                    subtotal
+                )
+                VALUES (
+                    v_booking_id,
+                    'Add-on: ' || COALESCE(v_addon.name, 'Optional Service'),
+                    v_final_unit_price,
+                    COALESCE(v_addon.quantity, 1),
                     v_final_subtotal
                 );
             END IF;
         END LOOP;
     END IF;
 
+    -- 8. Audit status transition history
     INSERT INTO public.booking_status_history (
         booking_id,
         from_status,
@@ -627,11 +711,12 @@ BEGIN
         'pending',
         'client',
         p_client_id,
-        'Booking initialized by client.'
+        'Booking initialized with 10-minute hold by client.'
     );
 
+    -- 9. Return newly created booking record
     RETURN QUERY
-    SELECT 
+    SELECT
         b.id,
         b.booking_reference,
         b.client_id,
@@ -644,6 +729,10 @@ BEGIN
         b.status,
         b.check_in_code,
         b.special_requests,
+        b.hold_expires_at,
+        b.payment_plan,
+        b.paid_amount,
+        b.remaining_balance,
         b.created_at,
         b.updated_at
     FROM public.bookings b
@@ -802,4 +891,24 @@ BEGIN
     ORDER BY d.date DESC;
 END;
 $$;
+
+-- ----------------------------------------------------------------------------
+-- 23. Email Verifications Table (Client Security & OTP Validation)
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS email_verifications (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email VARCHAR(255) NOT NULL,
+    otp_hash VARCHAR(255) NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL,
+    attempts INTEGER NOT NULL DEFAULT 0,
+    max_attempts INTEGER NOT NULL DEFAULT 5,
+    is_verified BOOLEAN NOT NULL DEFAULT FALSE,
+    verified_at TIMESTAMPTZ,
+    last_sent_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_email_verifications_email ON email_verifications(email);
+CREATE INDEX IF NOT EXISTS idx_email_verifications_lookup ON email_verifications(email, is_verified, created_at DESC);
+
 

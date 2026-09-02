@@ -42,6 +42,7 @@ export function validateCreateBooking(data: any): { isValid: boolean; errors?: R
       endTime,
       addOns: Array.isArray(data.addOns) ? data.addOns : [],
       specialRequests: typeof data.specialRequests === 'string' ? data.specialRequests.trim() : undefined,
+      paymentPlan: data.paymentPlan === 'deposit_50' ? 'deposit_50' : 'full',
     },
   };
 }

@@ -155,20 +155,26 @@ export const HomePage: React.FC = () => {
   };
 
   return (
-    <div>
-      {/* 1. Hero Section */}
-      <section className="relative py-20 px-6 text-center border-b border-border/80 bg-gradient-to-b from-card/80 via-background to-background overflow-hidden">
-        <div className="max-w-4xl mx-auto space-y-6">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-wider shadow-sm">
+    <div className="relative overflow-hidden">
+      {/* 1. Hero Section with Rich Ambient Background Details */}
+      <section className="relative py-20 px-6 text-center border-b border-border/80 bg-gradient-to-b from-card/60 via-background to-background overflow-hidden">
+        {/* Subtle Background Grid & Atmospheric Lighting */}
+        <div className="absolute inset-0 bg-grid-pattern opacity-60 pointer-events-none" />
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] sm:w-[850px] h-[350px] bg-gradient-to-tr from-blue-500/15 via-indigo-500/15 to-purple-500/10 rounded-full blur-3xl pointer-events-none -z-10 animate-pulse duration-1000" />
+        <div className="absolute -top-32 -left-32 w-80 h-80 bg-primary/10 rounded-full blur-3xl pointer-events-none -z-10" />
+        <div className="absolute -bottom-32 -right-32 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl pointer-events-none -z-10" />
+
+        <div className="max-w-4xl mx-auto space-y-6 relative z-10">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-wider shadow-sm backdrop-blur-sm">
             <Sparkles className="h-3.5 w-3.5" />
-            <span>The Future of Coworking in BGC</span>
+            <span>The Future of Coworking in Naga City</span>
           </div>
 
           <h1 className="text-4xl sm:text-6xl font-black text-foreground tracking-tight leading-[1.15] flex flex-col items-center justify-center">
             <span className="block">Work, Collaborate & Create in</span>
-            <span className="inline-flex items-center justify-center min-h-[1.25em] mt-1 sm:mt-2 bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent select-none">
+            <span className="inline-flex items-center justify-center min-h-[1.25em] mt-1 sm:mt-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-blue-400 dark:via-indigo-400 dark:to-purple-400 bg-clip-text text-transparent select-none">
               <span>{displayText}</span>
-              <span className="inline-block w-[3px] sm:w-[4px] h-[0.8em] ml-1 bg-gradient-to-b from-blue-400 to-purple-400 rounded-full animate-pulse align-middle" />
+              <span className="inline-block w-[3px] sm:w-[4px] h-[0.8em] ml-1 bg-gradient-to-b from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 rounded-full animate-pulse align-middle" />
             </span>
           </h1>
 
@@ -214,7 +220,7 @@ export const HomePage: React.FC = () => {
           </Card>
 
           <Card hoverEffect className="space-y-3">
-            <div className="h-11 w-11 rounded-xl bg-indigo-500/15 flex items-center justify-center text-indigo-400 border border-indigo-500/20">
+            <div className="h-11 w-11 rounded-xl bg-indigo-500/10 dark:bg-indigo-500/15 flex items-center justify-center text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
               <Coffee className="h-5 w-5" />
             </div>
             <h3 className="text-base font-bold text-foreground">Artisan Cafe & Bar</h3>
@@ -224,7 +230,7 @@ export const HomePage: React.FC = () => {
           </Card>
 
           <Card hoverEffect className="space-y-3">
-            <div className="h-11 w-11 rounded-xl bg-amber-500/15 flex items-center justify-center text-amber-400 border border-amber-500/20">
+            <div className="h-11 w-11 rounded-xl bg-amber-500/10 dark:bg-amber-500/15 flex items-center justify-center text-amber-600 dark:text-amber-400 border border-amber-500/20">
               <Clock className="h-5 w-5" />
             </div>
             <h3 className="text-base font-bold text-foreground">Instant QR Check-in</h3>
@@ -234,7 +240,7 @@ export const HomePage: React.FC = () => {
           </Card>
 
           <Card hoverEffect className="space-y-3">
-            <div className="h-11 w-11 rounded-xl bg-emerald-500/15 flex items-center justify-center text-emerald-400 border border-emerald-500/20">
+            <div className="h-11 w-11 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/15 flex items-center justify-center text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
               <Shield className="h-5 w-5" />
             </div>
             <h3 className="text-base font-bold text-foreground">24/7 Security & Access</h3>

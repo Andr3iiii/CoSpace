@@ -10,6 +10,7 @@ import {
   DropdownMenuSeparator,
 } from '../ui/Dropdown';
 import { Sparkles, Calendar, Bell, User, LogOut, Menu, X, Home, Building2 } from 'lucide-react';
+import { ThemeToggle } from '../ui/ThemeToggle';
 import { cn } from '@/lib/utils';
 
 export const Header: React.FC = () => {
@@ -72,6 +73,9 @@ export const Header: React.FC = () => {
 
         {/* Right Auth / Profile Controls & Mobile Toggle */}
         <div className="flex items-center gap-2 sm:gap-3">
+          {/* Light / Dark Mode Toggle Button */}
+          <ThemeToggle />
+
           {client ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

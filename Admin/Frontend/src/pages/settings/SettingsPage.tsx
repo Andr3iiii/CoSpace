@@ -26,7 +26,7 @@ export const SettingsPage: React.FC = () => {
           </p>
 
           <Input label="Platform Name" defaultValue="CoSpace Innovation Hub" />
-          <Input label="Physical Space Location" defaultValue="7th Ave, Bonifacio Global City, Taguig, Metro Manila" />
+          <Input label="Physical Space Location" defaultValue="2nd Floor JH Bldg., Sta. Cruz, Naga City, Camarines Sur, Philippines" />
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
             <Input label="Operating Hours (Open)" defaultValue="07:00 AM" />

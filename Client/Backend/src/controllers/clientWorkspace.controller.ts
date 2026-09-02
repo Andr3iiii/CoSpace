@@ -30,6 +30,16 @@ export class ClientWorkspaceController {
       next(error);
     }
   }
+
+  async getBookedSlots(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const date = String(req.query.date || '');
+      const result = await clientWorkspaceService.getBookedSlots(req.params.id, date);
+      sendSuccess(res, 'Booked slots retrieved.', result);
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export const clientWorkspaceController = new ClientWorkspaceController();

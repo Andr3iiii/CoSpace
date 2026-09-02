@@ -101,7 +101,7 @@ export const WorkspacesPage: React.FC = () => {
           Explore Coworking & Meeting Spaces
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Choose your preferred workspace in Bonifacio Global City. Book by the hour or reserve for the full day.
+          Choose your preferred workspace at 2nd Floor JH Bldg., Sta. Cruz, Naga City, Camarines Sur. Book by the hour or reserve for the full day.
         </p>
       </div>
 

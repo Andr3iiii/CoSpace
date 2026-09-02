@@ -8,7 +8,7 @@ export class GoogleMapsAdminIntegration {
   }
 
   async geocodeAddress(address: string): Promise<{ lat: number; lng: number }> {
-    return { lat: 14.5547, lng: 121.0476 }; // BGC Bonifacio Global City coordinates
+    return { lat: 13.6218, lng: 123.1948 }; // 2nd Floor JH Bldg., Sta. Cruz, Naga City coordinates
   }
 }
 

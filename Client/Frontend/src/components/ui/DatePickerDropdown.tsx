@@ -153,7 +153,7 @@ export const DatePickerDropdown: React.FC<DatePickerDropdownProps> = ({
 
       {/* Calendar Dropdown Card */}
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 z-50 w-full sm:w-[320px] p-4 rounded-3xl bg-[#0F172A] border border-border shadow-2xl backdrop-blur-2xl ring-1 ring-white/10 animate-in fade-in-50 zoom-in-95">
+        <div className="absolute top-full left-0 mt-2 z-50 w-full sm:w-[320px] p-4 rounded-3xl bg-popover text-popover-foreground border border-border shadow-2xl backdrop-blur-2xl ring-1 ring-border/50 animate-in fade-in-50 zoom-in-95">
           {/* Month Header with < > Controls */}
           <div className="flex items-center justify-between mb-4 px-1">
             <h3 className="text-base font-black text-foreground tracking-tight">

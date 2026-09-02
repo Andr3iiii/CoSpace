@@ -11,14 +11,15 @@ describe('Client Backend Validators', () => {
     expect(invalid.errors?.password).toBeDefined();
 
     const valid = validateClientRegister({
-      email: 'member@cospace.com',
+      email: 'member@gmail.com',
       password: 'StrongPassword123!',
       firstName: 'John',
       lastName: 'Doe',
-      phone: '+639171234567',
+      countryCode: '+63',
+      phone: '9171234567',
     });
     expect(valid.isValid).toBe(true);
-    expect(valid.value?.email).toBe('member@cospace.com');
+    expect(valid.value?.email).toBe('member@gmail.com');
   });
 
   it('validates client login credentials', () => {

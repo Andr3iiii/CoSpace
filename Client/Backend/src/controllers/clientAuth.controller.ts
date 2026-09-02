@@ -4,6 +4,35 @@ import { sendSuccess } from '../utils/response';
 import { AuthenticatedClientRequest } from '../middleware/auth';
 
 export class ClientAuthController {
+  async sendOtp(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { email } = req.body;
+      const result = await clientAuthService.sendOtp(email);
+      sendSuccess(res, result.message, result, 200);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async verifyOtp(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { email, otp } = req.body;
+      const result = await clientAuthService.verifyOtp(email, otp);
+      res.status(200).json({
+        success: true,
+        verified: true,
+        verificationToken: result.verificationToken,
+        message: result.message,
+        data: {
+          verified: true,
+          verificationToken: result.verificationToken,
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async register(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const result = await clientAuthService.register(req.body);
