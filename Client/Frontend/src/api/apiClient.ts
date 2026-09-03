@@ -32,7 +32,15 @@ export class ApiClient {
   }
 
   private getToken(): string | null {
-    return localStorage.getItem('cospace_client_token');
+    try {
+      const token = localStorage.getItem('cospace_client_token');
+      if (!token || token === 'undefined' || token === 'null') {
+        return null;
+      }
+      return token;
+    } catch {
+      return null;
+    }
   }
 
   async request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {

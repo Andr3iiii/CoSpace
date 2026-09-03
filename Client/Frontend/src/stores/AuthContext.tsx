@@ -19,14 +19,36 @@ export const AuthContext: React.Context<AuthContextType | undefined> =
   (typeof globalThis !== 'undefined' && (globalThis as any).__COSPACE_AUTH_CONTEXT__) ||
   ((globalThis as any).__COSPACE_AUTH_CONTEXT__ = createContext<AuthContextType | undefined>(undefined));
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [client, setClient] = useState<ClientUser | null>(() => {
+function safeGetStoredUser(): ClientUser | null {
+  try {
     const saved = localStorage.getItem('cospace_client_user');
-    return saved ? JSON.parse(saved) : null;
-  });
-  const [token, setToken] = useState<string | null>(() => {
-    return localStorage.getItem('cospace_client_token');
-  });
+    if (!saved || saved === 'undefined' || saved === 'null') {
+      localStorage.removeItem('cospace_client_user');
+      return null;
+    }
+    return JSON.parse(saved);
+  } catch {
+    localStorage.removeItem('cospace_client_user');
+    return null;
+  }
+}
+
+function safeGetStoredToken(): string | null {
+  try {
+    const token = localStorage.getItem('cospace_client_token');
+    if (!token || token === 'undefined' || token === 'null') {
+      localStorage.removeItem('cospace_client_token');
+      return null;
+    }
+    return token;
+  } catch {
+    return null;
+  }
+}
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [client, setClient] = useState<ClientUser | null>(() => safeGetStoredUser());
+  const [token, setToken] = useState<string | null>(() => safeGetStoredToken());
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
@@ -34,8 +56,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (token) {
         try {
           const profile = await authApi.me();
-          setClient(profile);
-          localStorage.setItem('cospace_client_user', JSON.stringify(profile));
+          if (profile) {
+            setClient(profile);
+            localStorage.setItem('cospace_client_user', JSON.stringify(profile));
+          } else {
+            logout();
+          }
         } catch (err) {
           console.error('Session expired:', err);
           logout();
@@ -48,18 +74,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     const res = await authApi.login({ email, password });
-    setToken(res.token);
-    setClient(res.client);
-    localStorage.setItem('cospace_client_token', res.token);
-    localStorage.setItem('cospace_client_user', JSON.stringify(res.client));
+    if (res?.token) {
+      setToken(res.token);
+      localStorage.setItem('cospace_client_token', res.token);
+    }
+    if (res?.client) {
+      setClient(res.client);
+      localStorage.setItem('cospace_client_user', JSON.stringify(res.client));
+    }
   };
 
   const register = async (data: any) => {
     const res = await authApi.register(data);
-    setToken(res.token);
-    setClient(res.client);
-    localStorage.setItem('cospace_client_token', res.token);
-    localStorage.setItem('cospace_client_user', JSON.stringify(res.client));
+    if (res?.token) {
+      setToken(res.token);
+      localStorage.setItem('cospace_client_token', res.token);
+    }
+    if (res?.client) {
+      setClient(res.client);
+      localStorage.setItem('cospace_client_user', JSON.stringify(res.client));
+    }
   };
 
   const logout = async () => {

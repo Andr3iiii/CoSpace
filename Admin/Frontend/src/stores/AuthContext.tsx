@@ -12,14 +12,36 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [admin, setAdmin] = useState<AdminUser | null>(() => {
+function safeGetStoredAdmin(): AdminUser | null {
+  try {
     const saved = localStorage.getItem('cospace_admin_user');
-    return saved ? JSON.parse(saved) : null;
-  });
-  const [token, setToken] = useState<string | null>(() => {
-    return localStorage.getItem('cospace_admin_token');
-  });
+    if (!saved || saved === 'undefined' || saved === 'null') {
+      localStorage.removeItem('cospace_admin_user');
+      return null;
+    }
+    return JSON.parse(saved);
+  } catch {
+    localStorage.removeItem('cospace_admin_user');
+    return null;
+  }
+}
+
+function safeGetStoredAdminToken(): string | null {
+  try {
+    const token = localStorage.getItem('cospace_admin_token');
+    if (!token || token === 'undefined' || token === 'null') {
+      localStorage.removeItem('cospace_admin_token');
+      return null;
+    }
+    return token;
+  } catch {
+    return null;
+  }
+}
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [admin, setAdmin] = useState<AdminUser | null>(() => safeGetStoredAdmin());
+  const [token, setToken] = useState<string | null>(() => safeGetStoredAdminToken());
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
@@ -27,8 +49,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (token) {
         try {
           const profile = await authApi.me();
-          setAdmin(profile);
-          localStorage.setItem('cospace_admin_user', JSON.stringify(profile));
+          if (profile) {
+            setAdmin(profile);
+            localStorage.setItem('cospace_admin_user', JSON.stringify(profile));
+          } else {
+            logout();
+          }
         } catch (err) {
           console.error('Session validation failed:', err);
           logout();
@@ -41,10 +67,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     const res = await authApi.login({ email, password });
-    setToken(res.token);
-    setAdmin(res.admin);
-    localStorage.setItem('cospace_admin_token', res.token);
-    localStorage.setItem('cospace_admin_user', JSON.stringify(res.admin));
+    if (res?.token) {
+      setToken(res.token);
+      localStorage.setItem('cospace_admin_token', res.token);
+    }
+    if (res?.admin) {
+      setAdmin(res.admin);
+      localStorage.setItem('cospace_admin_user', JSON.stringify(res.admin));
+    }
   };
 
   const logout = async () => {
