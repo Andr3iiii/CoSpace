@@ -26,6 +26,7 @@
     "tunnel:admin": "node scripts/cloudflare-tunnel.js admin"
   },
   "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.10",
     "concurrently": "^9.1.2",
     "untun": "^0.2.2"
   },
